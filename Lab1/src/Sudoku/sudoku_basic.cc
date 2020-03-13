@@ -5,63 +5,72 @@
 
 #include "sudoku.h"
 
-int board[N];
-int spaces[N];
-int nspaces;
+int board[30][N];
+int spaces[30][N];
+int nspaces[30];
 int (*chess)[COL] = (int (*)[COL])board;
 
-static void find_spaces()
+static void find_spaces(const int i)
 {
-  nspaces = 0;
+  nspaces[i] = 0;
   for (int cell = 0; cell < N; ++cell) {
-    if (board[cell] == 0)
-      spaces[nspaces++] = cell;
+    if (board[i][cell] == 0)
+      spaces[i][nspaces[i]++] = cell;
   }
 }
 
-void input(const char in[N])
+void input(const int i,const char in[N])
 {
   for (int cell = 0; cell < N; ++cell) {
-    board[cell] = in[cell] - '0';
-    assert(0 <= board[cell] && board[cell] <= NUM);
+    board[i][cell] = in[cell] - '0';
+    assert(0 <= board[i][cell] && board[i][cell] <= NUM);
   }
-  find_spaces();
+	//for(int j = 0; j < N; ++j)
+	  //printf("%c",in[j]);
+	//printf("\n");  
+  find_spaces(i);
 }
 
-bool available(int guess, int cell)
+bool available(int j, int guess, int cell)
 {
   for (int i = 0; i < NEIGHBOR; ++i) {
     int neighbor = neighbors[cell][i];
-    if (board[neighbor] == guess) {
+    if (board[j][neighbor] == guess) {
       return false;
     }
   }
   return true;
 }
 
-bool solve_sudoku_basic(int which_space)
+bool solve_sudoku_basic(int i, int which_space)
 {
-  if (which_space >= nspaces) {
+  if (which_space >= nspaces[i]) {
     return true;
   }
-
+  //for(int j = 0; j < N; ++j)
+    //printf("%d",board[i][j]);
+  //printf(" %d %d   solve_sudoku_basic\n",nspaces[i],i);
   // find_min_arity(which_space);
-  int cell = spaces[which_space];
+  int cell = spaces[i][which_space];
 
   for (int guess = 1; guess <= NUM; ++guess) {
-    if (available(guess, cell)) {
+    if (available(i, guess, cell)) {
       // hold
-      assert(board[cell] == 0);
-      board[cell] = guess;
+	//printf("%d %d %d\n",i,cell,board[i][cell]);
+      assert(board[i][cell] == 0);
+      board[i][cell] = guess;
 
       // try
-      if (solve_sudoku_basic(which_space+1)) {
+      if (solve_sudoku_basic(i, which_space+1)) {
+	//for(int j = 0; j < N; ++j)
+	  //printf("%d",board[i][j]);
+	//printf("%d\n",i);
         return true;
       }
 
       // unhold
-      assert(board[cell] == guess);
-      board[cell] = 0;
+      assert(board[i][cell] == guess);
+      board[i][cell] = 0;
     }
   }
   return false;
