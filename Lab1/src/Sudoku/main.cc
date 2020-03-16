@@ -5,6 +5,7 @@
 #include <sys/time.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <sys/sysinfo.h>
 #include "sudoku.h"
 int result[30][N];
 int total_solved = 0;
@@ -58,7 +59,7 @@ int main(int argc, char* argv[])
   }
 
 
-  int thread_n = 4;
+  int thread_n = sysconf(_SC_NPROCESSORS_CONF);
   pthread_t tids[thread_n];
   char puzzle[128];
   int break_flag = 30;
