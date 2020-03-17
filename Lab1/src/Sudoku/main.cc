@@ -51,13 +51,30 @@ int main(int argc, char* argv[])
   int total = 0;
   //bool (*solve)(int) = solve_sudoku_basic;
   printf("Assuming your program has been inputted with two file names from stdin: \n");
-  printf("%s\n",argv[1]);
-  printf("\n");
-  printf("%s has the following content:\n",argv[1]);
-  while (fgets(puzzlep, sizeof puzzlep, fpp1) != NULL) {
-    printf("%s", puzzlep);
-  }
+  int file_num = 1, file_max = 0;
+  while(1)
+  {
+    if (argv[file_num] == NULL)
+    {
+      file_max = file_num;
+      break;
+    }
 
+    printf("%s\n",argv[file_num]);
+    file_num++;
+  }
+  
+
+  printf("\n");
+
+  for(file_num = 1; file_num < file_max; file_num++)
+  {
+    printf("%s has the following content:\n",argv[file_num]);
+    fpp1 = fopen(argv[file_num], "r");
+    while (fgets(puzzlep, sizeof puzzlep, fpp1) != NULL) 
+      printf("%s", puzzlep);
+    printf("\n");
+  }
 
   int thread_n = sysconf(_SC_NPROCESSORS_CONF);
   pthread_t tids[thread_n];
@@ -68,7 +85,9 @@ int main(int argc, char* argv[])
   
   printf("Then your program should output the following results to stdout:\n");
   int64_t start = now();
-  FILE* fp = fopen(argv[1], "r");
+  for(file_num = 1; file_num < file_max; file_num++)
+{
+  FILE* fp = fopen(argv[file_num], "r");
   //while (fgets(puzzle, sizeof puzzle, fp) != NULL) {
   while(1) {
     for (int i = 0; i < thread_n; ++i)
@@ -100,11 +119,6 @@ int main(int argc, char* argv[])
     if (break_flag != 30)
       break;
 
-
-
-
-
-
     //if (strlen(puzzle[0]) >= N) {
       //++total;
       //input(puzzle[0]);
@@ -124,15 +138,14 @@ int main(int argc, char* argv[])
         //printf("No: %s", puzzle[0]);
       //}
     //}
-
-
-
-
-
   }
+}
   int64_t end = now();
-  FILE* fpp2 = fopen(argv[1], "r");
   int total1 = 1;
+  for(file_num = 1; file_num < file_max; file_num++)
+{
+  FILE* fpp2 = fopen(argv[file_num], "r");
+  
   while (fgets(puzzlep, sizeof puzzlep, fpp2) != NULL) {
     if(total1 == 1)
       printf("Where the %dst line in the output is the solution to puzzle\n",total1++);
@@ -144,9 +157,9 @@ int main(int argc, char* argv[])
       printf("Where the %dth line in the output is the solution to puzzle\n",total1++);
     printf("%s", puzzlep);
   }
+}
   double sec = (end-start)/1000000.0;
   printf("%f sec %f ms each %d\n", sec, 1000*sec/total, total_solved);
-
   return 0;
 }
 
