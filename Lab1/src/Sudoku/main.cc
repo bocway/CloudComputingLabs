@@ -14,7 +14,11 @@
 
 #define INPUT_JOB_NUM 30
 int nextJobToBeDone=0;
-int debug=1;
+int debug=0;
+char puzzle[128];
+int total_solved = 0;
+int total = 0;
+
 pthread_mutex_t jobQueueMutex=PTHREAD_MUTEX_INITIALIZER;
 
 int64_t now()
@@ -33,6 +37,10 @@ typedef struct {
    int numOfsolve;
 } ThreadParas;
 
+typedef struct {
+   char* fileName;
+} ReadParas;
+
 int recvAJob()
 {
   int currentJobID=0;
@@ -46,6 +54,21 @@ int recvAJob()
   nextJobToBeDone++;
   pthread_mutex_unlock(&jobQueueMutex);
   return currentJobID;
+}
+
+void* myReadFunc(void* args){
+  ReadParas* para = (ReadParas*) args;
+  if(debug)
+    printf("para= %s",para->fileName);
+  
+  FILE* fp = fopen(para->fileName, "r");//argv【1】：open the file  
+  while (fgets(puzzle, sizeof puzzle, fp) != NULL) {//get a input puzzle
+    if (strlen(puzzle) >= N) {
+      ++total;
+      input(total,puzzle);
+      //init_cache();
+    }
+  }
 }
 
 void* mysolve(void* args) {
@@ -72,7 +95,8 @@ void* mysolve(void* args) {
       }     
     }
     else {//haven‘t sloved this sudoku
-        printf("No: %d didn't solve!\n", currentJobID);
+        if(debug)
+          printf("No: %d didn't solve!\n", currentJobID);
       }
   }  
   para->numOfsolve=sum;
@@ -82,10 +106,6 @@ int main(int argc, char* argv[])
 {
   init_neighbors();
 
-  FILE* fp = fopen(argv[1], "r");//argv【1】：open the file
-  char puzzle[128];
-  int total_solved = 0;
-  int total = 0;
   bool (*solve)(int,int) = solve_sudoku_basic;
 
   // if (argv[2] != NULL)//argv[2] get sudoku solution
@@ -95,25 +115,31 @@ int main(int argc, char* argv[])
   //     solve = solve_sudoku_min_arity_cache;
   //   else if (argv[2][0] == 'd')
   //     solve = solve_sudoku_dancing_links;
-
-  int numOfWorkerThread=1;//argv[3] get num of thread
-  if(argc>=2)
+  
+  int numOfWorkerThread=3;//argv[3] get num of thread
+  if(argv[2] != NULL)
     numOfWorkerThread=atoi(argv[2]);
 
   int64_t start = now();
   //动态分配任务两种实现方式：
   //1.写一个分发线程分发给不同的worker
-  //2.每次做完就从输入队列里拿 
-  while (fgets(puzzle, sizeof puzzle, fp) != NULL) {//get a input puzzle
-    if (strlen(puzzle) >= N) {
-      ++total;
-      input(total,puzzle);
-      //init_cache();
-    }
+  //2.每次做完就从输入队列里拿
+  pthread_t fileReader;
+  pthread_t th[numOfWorkerThread];
+
+  ReadParas *rePara;
+  rePara=(ReadParas*)malloc(sizeof(ReadParas)); //记得先分配内存空间。。
+  rePara->fileName=(char*)argv[1];
+  ThreadParas thPara[numOfWorkerThread];
+  printf("para=%s",rePara->fileName);
+
+  if(pthread_create(&fileReader, NULL, myReadFunc,rePara)!=0)
+  {
+    perror("fileReader pthread_create failed");
+    exit(1);
   }
 
-  pthread_t th[numOfWorkerThread];
-  ThreadParas thPara[numOfWorkerThread];
+  pthread_join(fileReader, NULL);
   for(int i=0;i<numOfWorkerThread;i++)
   {
     if(pthread_create(&th[i], NULL, mysolve, &thPara[i])!=0)
@@ -122,7 +148,7 @@ int main(int argc, char* argv[])
       exit(1);
     }
   }
-
+  
   for(int i=0;i<numOfWorkerThread;i++)
     pthread_join(th[i], NULL);
   
