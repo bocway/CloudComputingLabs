@@ -136,7 +136,7 @@ void* myOutFunc(void* args) {
       next_id++;
       out.erase(iter);
     }  
-    else
+    else//这轮没做功 释放锁和信号量
     {     
       pthread_mutex_unlock(&out_mutex);
       sem_post(&out_full); 
