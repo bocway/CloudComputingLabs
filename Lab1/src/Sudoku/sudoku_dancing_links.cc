@@ -262,12 +262,9 @@ bool solve_sudoku_dancing_links(boardStruct boar)
   {      
     //memcpy(o.board,d.inout_,sizeof(o.board));
     o.finish=true;
-    printf("No: %d have been solved:", o.id);
         for(int i=0;i<81;i++){
             o.board[i]=d.inout_[i];
-            printf("%d",o.board[i]);
         }
-        printf("\n");
     sem_wait(&out_empty); 
     pthread_mutex_lock(&out_mutex);
     out.push(o);

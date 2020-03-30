@@ -23,6 +23,7 @@ pthread_mutex_t out_mutex;
 sem_t in_full; 
 sem_t in_empty; 
 pthread_mutex_t in_mutex;
+long int job_id=0;
 static void find_spaces(boardStruct &b)
 {
   b.nspaces = 0;
@@ -35,18 +36,23 @@ static void find_spaces(boardStruct &b)
 void input(const char in[N])
 {
   boardStruct b;
-  outStruct o;
   for (int cell = 0; cell < N; ++cell) {
     b.board[cell] = in[cell] - '0';
-    o.board[cell]=b.board[cell];
     assert(0 <= b.board[cell] && b.board[cell] <= NUM);
   } 
   find_spaces(b);
-  b.id=q.size();
+  b.id=job_id;
+  job_id++;
   b.finish=false;
 
-  printf("id %d has been append\n",b.id);
+  sem_wait(&in_empty); 
+  pthread_mutex_lock(&in_mutex);
   q.push(b);
+  printf("id %d has been append\n",b.id);
+  pthread_mutex_unlock(&in_mutex);
+  sem_post(&in_full); 
+  
+
 
   
 }

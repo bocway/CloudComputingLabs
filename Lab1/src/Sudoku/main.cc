@@ -45,7 +45,7 @@ boardStruct recvAJob()
 {
   int currentJobID=0;
   boardStruct currentJob;
-  pthread_mutex_lock(&jobqueueMutex);//加锁
+  pthread_mutex_lock(&jobqueueMutex);//加锁——这个锁在高级版要删除。
 
   if(nextJobToBeDone>=INPUT_JOB_NUM) //判断任务是否全部做完，做完则解锁推出
   {
@@ -55,19 +55,21 @@ boardStruct recvAJob()
   }
   currentJobID=nextJobToBeDone;//当前任务id设置为下一个
   nextJobToBeDone++;
+
+  sem_wait(&in_full); 
+  pthread_mutex_lock(&in_mutex);
   currentJob=q.front();
   q.pop();
-
-
+  pthread_mutex_unlock(&in_mutex);
+  sem_post(&in_empty); 
+  
   pthread_mutex_unlock(&jobqueueMutex);
   return currentJob;
 }
 
 void* myReadFunc(void* args){
   ReadParas* para = (ReadParas*) args;
-  if(debug)
-    printf("para= %s",para->fileName);
-  
+
   FILE* fp = fopen(para->fileName, "r");//argv【1】：open the file  
   while (fgets(puzzle, sizeof puzzle, fp) != NULL) {//get a input puzzle
     if (strlen(puzzle) >= N) {
@@ -110,7 +112,28 @@ void* mysolve(void* args) {
   }  
   para->numOfsolve=sum;
 }
+void* myOutFunc(void* args) {
+  int i=0;
+  while(1)
+  {
+    if(i==INPUT_JOB_NUM)  break;//高阶版删除。
+    sem_wait(&out_full); 
+    pthread_mutex_lock(&out_mutex);
 
+    //思路：一个变量记录当前需要输入的id，有再输出。
+    outStruct o=out.front();
+    out.pop();
+    printf("No: %d have been solved:", o.id);
+    for(int i=0;i<81;i++){
+        printf("%d",o.board[i]);
+    }
+    printf("\n");
+    i++;    
+
+    pthread_mutex_unlock(&out_mutex);
+    sem_post(&out_empty); 
+  }
+}
 int main(int argc, char* argv[])
 {
   init_neighbors();
@@ -132,6 +155,7 @@ int main(int argc, char* argv[])
   //1.写一个分发线程分发给不同的worker
   //2.每次做完就从输入队列里拿
   pthread_t fileReader;
+  pthread_t outputer;
   pthread_t th[numOfWorkerThread];
 
   ReadParas *rePara;
@@ -145,7 +169,7 @@ int main(int argc, char* argv[])
     exit(1);
   }
 
-  pthread_join(fileReader, NULL);
+  
   for(int i=0;i<numOfWorkerThread;i++)
   {
     if(pthread_create(&th[i], NULL, mysolve, &thPara[i])!=0)
@@ -154,10 +178,17 @@ int main(int argc, char* argv[])
       exit(1);
     }
   }
-  
+  if(pthread_create(&outputer, NULL, myOutFunc,rePara)!=0)
+  {
+    perror("fileReader pthread_create failed");
+    exit(1);
+  }
+
+  pthread_join(fileReader, NULL);
   for(int i=0;i<numOfWorkerThread;i++)
     pthread_join(th[i], NULL);
-  
+  pthread_join(outputer, NULL);
+
   for(int i=0;i<numOfWorkerThread;i++)
     total_solved=total_solved+thPara[i].numOfsolve;
   int64_t end = now();
