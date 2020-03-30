@@ -193,7 +193,7 @@ struct Dance
         c->left->right = c;
     }
 
-    bool solve()
+    bool solve(int id)
     {
         if (root_->left == root_) {
             for (size_t i = 0; i < stack_.size(); ++i) {
@@ -211,6 +211,7 @@ struct Dance
                 //assert(cell != -1 && val != -1);
                 inout_[cell] = val;
             }
+
             return true;
         }
 
@@ -221,7 +222,7 @@ struct Dance
             for (Node* j = row->right; j != row; j = j->right) {
                 cover(j->col);
             }
-            if (solve()) {
+            if (solve(id)) {
                 return true;
             }
             stack_.pop_back();
@@ -252,8 +253,35 @@ struct Dance
     }
 };
 
-bool solve_sudoku_dancing_links(int unused)
+bool solve_sudoku_dancing_links(boardStruct boar)
 {
-  Dance d(board);
-  return d.solve();
+  Dance d(boar.board);
+  outStruct o;
+  o.id=boar.id;
+  if(d.solve(boar.id))
+  {      
+    //memcpy(o.board,d.inout_,sizeof(o.board));
+    o.finish=true;
+    printf("No: %d have been solved:", o.id);
+        for(int i=0;i<81;i++){
+            o.board[i]=d.inout_[i];
+            printf("%d",o.board[i]);
+        }
+        printf("\n");
+    sem_wait(&out_empty); 
+    pthread_mutex_lock(&out_mutex);
+    out.push(o);
+    pthread_mutex_unlock(&out_mutex);
+    sem_post(&out_full); 
+    return true;
+  }
+  else {
+    o.finish=false;
+    sem_wait(&out_empty); 
+    pthread_mutex_lock(&out_mutex);
+    out.push(o);
+    pthread_mutex_unlock(&out_mutex);
+    sem_post(&out_full); 
+    return false;
+  }
 }

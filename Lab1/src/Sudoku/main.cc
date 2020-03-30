@@ -6,20 +6,20 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include <pthread.h>
+
 #include <sys/stat.h>
 #include <sys/time.h>
-
+#include<queue>
 #include "sudoku.h"
 
 #define INPUT_JOB_NUM 30
 int nextJobToBeDone=0;
-int debug=0;
+int debug=1;
 char puzzle[128];
 int total_solved = 0;
 int total = 0;
 
-pthread_mutex_t jobQueueMutex=PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t jobqueueMutex=PTHREAD_MUTEX_INITIALIZER;
 
 int64_t now()
 {
@@ -41,19 +41,26 @@ typedef struct {
    char* fileName;
 } ReadParas;
 
-int recvAJob()
+boardStruct recvAJob()
 {
   int currentJobID=0;
-  pthread_mutex_lock(&jobQueueMutex);//加锁
+  boardStruct currentJob;
+  pthread_mutex_lock(&jobqueueMutex);//加锁
+
   if(nextJobToBeDone>=INPUT_JOB_NUM) //判断任务是否全部做完，做完则解锁推出
   {
-    pthread_mutex_unlock(&jobQueueMutex);
-    return -1;
+    pthread_mutex_unlock(&jobqueueMutex);
+    currentJob.finish=true;
+    return currentJob;
   }
   currentJobID=nextJobToBeDone;//当前任务id设置为下一个
   nextJobToBeDone++;
-  pthread_mutex_unlock(&jobQueueMutex);
-  return currentJobID;
+  currentJob=q.front();
+  q.pop();
+
+
+  pthread_mutex_unlock(&jobqueueMutex);
+  return currentJob;
 }
 
 void* myReadFunc(void* args){
@@ -65,7 +72,7 @@ void* myReadFunc(void* args){
   while (fgets(puzzle, sizeof puzzle, fp) != NULL) {//get a input puzzle
     if (strlen(puzzle) >= N) {
       ++total;
-      input(total,puzzle);
+      input(puzzle);
       //init_cache();
     }
   }
@@ -74,29 +81,31 @@ void* myReadFunc(void* args){
 void* mysolve(void* args) {
   ThreadParas* para = (ThreadParas*) args;
   int sum=0;
-  int currentJobID=0;
-  int *whichJobIHaveDone=(int*)malloc(INPUT_JOB_NUM*sizeof(int));//Remember which job I have done
-  long int numOfJobsIHaveDone=0;//Remember how many jobs I have done
+  boardStruct currentJob;
+  // int *whichJobIHaveDone=(int*)malloc(INPUT_JOB_NUM*sizeof(int));//Remember which job I have done
+  // long int numOfJobsIHaveDone=0;//Remember how many jobs I have done
   while(1)//相比preassign唯一的改动：算得越快，拿得越早
   {
-    currentJobID=recvAJob();//获得一个任务。 这个函数里面要加锁。
-    if(currentJobID==-1)//All job done!
-      break;
+    currentJob=recvAJob();//获得一个任务。 这个函数里面要加锁。
+    if(currentJob.finish)//All job done!
+    {
+        if(debug)
+          printf("worker finish \n");
+        break;
+    }
+      
+    if(debug)
+      printf("worker get num %d \n",currentJob.id);
+    // whichJobIHaveDone[numOfJobsIHaveDone]=currentJobID;
+    // numOfJobsIHaveDone++;
 
-    whichJobIHaveDone[numOfJobsIHaveDone]=currentJobID;
-    numOfJobsIHaveDone++;
-
-    if(solve_sudoku_basic(currentJobID,0))
+    if(solve_sudoku_dancing_links(currentJob))
     {
       sum++;
-      if(debug)
-      {
-        printf("No: %d have been solved\n", currentJobID);
-      }     
     }
     else {//haven‘t sloved this sudoku
         if(debug)
-          printf("No: %d didn't solve!\n", currentJobID);
+          printf("No: %d didn't solve!\n", currentJob.id);
       }
   }  
   para->numOfsolve=sum;
@@ -105,20 +114,18 @@ void* mysolve(void* args) {
 int main(int argc, char* argv[])
 {
   init_neighbors();
-
-  bool (*solve)(int,int) = solve_sudoku_basic;
-
-  // if (argv[2] != NULL)//argv[2] get sudoku solution
-  //   if (argv[2][0] == 'a')
-  //     solve = solve_sudoku_min_arity;
-  //   else if (argv[2][0] == 'c')
-  //     solve = solve_sudoku_min_arity_cache;
-  //   else if (argv[2][0] == 'd')
-  //     solve = solve_sudoku_dancing_links;
   
   int numOfWorkerThread=3;//argv[3] get num of thread
   if(argv[2] != NULL)
     numOfWorkerThread=atoi(argv[2]);
+
+  sem_init(&out_full, 0, 0); 
+  sem_init(&out_empty, 0, 30); 
+  pthread_mutex_init(&out_mutex,NULL);
+
+  sem_init(&in_full, 0, 0); 
+  sem_init(&in_empty, 0, 30); 
+  pthread_mutex_init(&in_mutex,NULL); 
 
   int64_t start = now();
   //动态分配任务两种实现方式：
@@ -131,7 +138,6 @@ int main(int argc, char* argv[])
   rePara=(ReadParas*)malloc(sizeof(ReadParas)); //记得先分配内存空间。。
   rePara->fileName=(char*)argv[1];
   ThreadParas thPara[numOfWorkerThread];
-  printf("para=%s",rePara->fileName);
 
   if(pthread_create(&fileReader, NULL, myReadFunc,rePara)!=0)
   {
@@ -158,6 +164,12 @@ int main(int argc, char* argv[])
   double sec = (end-start)/1000000.0;
   printf("%f sec %f ms each %d\n", sec, 1000*sec/total, total_solved);
 
+  sem_destroy(&in_full); 
+  sem_destroy(&in_empty); 
+  pthread_mutex_destroy(&in_mutex);
+  sem_destroy(&out_full); 
+  sem_destroy(&out_empty); 
+  pthread_mutex_destroy(&out_mutex);
   return 0;
 }
 

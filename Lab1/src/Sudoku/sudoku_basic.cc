@@ -2,76 +2,62 @@
 #include <stdio.h>
 
 #include <algorithm>
-
+#include <queue>
+#include <queue>
+#include <pthread.h>
+#include <semaphore.h> 
 #include "sudoku.h"
+using namespace std;
 
-int board[30][N];
-int spaces[30][N];
-int nspaces[30];
-int (*chess)[COL] = (int (*)[COL])board;
+// int board[N];
+// int spaces[N];
+// int nspaces;
+//int (*chess)[COL] = (int (*)[COL])board;
 
-static void find_spaces(const int i)
+queue<boardStruct> q;
+queue<outStruct> out;
+sem_t out_full; 
+sem_t out_empty; 
+pthread_mutex_t out_mutex;
+
+sem_t in_full; 
+sem_t in_empty; 
+pthread_mutex_t in_mutex;
+static void find_spaces(boardStruct &b)
 {
-  nspaces[i] = 0;
+  b.nspaces = 0;
   for (int cell = 0; cell < N; ++cell) {
-    if (board[i][cell] == 0)
-      spaces[i][nspaces[i]++] = cell;
+    if (b.board[cell] == 0)
+      b.spaces[b.nspaces++] = cell;
   }
 }
 
-void input(const int i,const char in[N])
+void input(const char in[N])
 {
+  boardStruct b;
+  outStruct o;
   for (int cell = 0; cell < N; ++cell) {
-    board[i][cell] = in[cell] - '0';
-    assert(0 <= board[i][cell] && board[i][cell] <= NUM);
-  }
-	//for(int j = 0; j < N; ++j)
-	  //printf("%c",in[j]);
-	//printf("\n");  
-  find_spaces(i);
+    b.board[cell] = in[cell] - '0';
+    o.board[cell]=b.board[cell];
+    assert(0 <= b.board[cell] && b.board[cell] <= NUM);
+  } 
+  find_spaces(b);
+  b.id=q.size();
+  b.finish=false;
+
+  printf("id %d has been append\n",b.id);
+  q.push(b);
+
+  
 }
 
-bool available(int j, int guess, int cell)
-{
-  for (int i = 0; i < NEIGHBOR; ++i) {
-    int neighbor = neighbors[cell][i];
-    if (board[j][neighbor] == guess) {
-      return false;
-    }
-  }
-  return true;
-}
-
-bool solve_sudoku_basic(int i, int which_space)
-{
-  if (which_space >= nspaces[i]) {
-    return true;
-  }
-  //for(int j = 0; j < N; ++j)
-    //printf("%d",board[i][j]);
-  //printf(" %d %d   solve_sudoku_basic\n",nspaces[i],i);
-  // find_min_arity(which_space);
-  int cell = spaces[i][which_space];
-
-  for (int guess = 1; guess <= NUM; ++guess) {
-    if (available(i, guess, cell)) {
-      // hold
-	//printf("%d %d %d\n",i,cell,board[i][cell]);
-      assert(board[i][cell] == 0);
-      board[i][cell] = guess;
-
-      // try
-      if (solve_sudoku_basic(i, which_space+1)) {
-	//for(int j = 0; j < N; ++j)
-	  //printf("%d",board[i][j]);
-	//printf("%d\n",i);
-        return true;
-      }
-
-      // unhold
-      assert(board[i][cell] == guess);
-      board[i][cell] = 0;
-    }
-  }
-  return false;
-}
+// bool available(int guess, int cell)
+// {
+//   for (int i = 0; i < NEIGHBOR; ++i) {
+//     int neighbor = neighbors[cell][i];
+//     if (board[neighbor] == guess) {
+//       return false;
+//     }
+//   }
+//   return true;
+// }
