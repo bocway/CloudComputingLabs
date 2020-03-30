@@ -43,18 +43,8 @@ typedef struct {
 
 boardStruct recvAJob()
 {
-  int currentJobID=0;
-  boardStruct currentJob;
-  pthread_mutex_lock(&jobqueueMutex);//加锁——这个锁在高级版要删除。
 
-  if(nextJobToBeDone>=INPUT_JOB_NUM) //判断任务是否全部做完，做完则解锁推出
-  {
-    pthread_mutex_unlock(&jobqueueMutex);
-    currentJob.finish=true;
-    return currentJob;
-  }
-  currentJobID=nextJobToBeDone;//当前任务id设置为下一个
-  nextJobToBeDone++;
+  boardStruct currentJob;
 
   sem_wait(&in_full); 
   pthread_mutex_lock(&in_mutex);
@@ -63,7 +53,7 @@ boardStruct recvAJob()
   pthread_mutex_unlock(&in_mutex);
   sem_post(&in_empty); 
   
-  pthread_mutex_unlock(&jobqueueMutex);
+
   return currentJob;
 }
 
@@ -84,8 +74,7 @@ void* mysolve(void* args) {
   ThreadParas* para = (ThreadParas*) args;
   int sum=0;
   boardStruct currentJob;
-  // int *whichJobIHaveDone=(int*)malloc(INPUT_JOB_NUM*sizeof(int));//Remember which job I have done
-  // long int numOfJobsIHaveDone=0;//Remember how many jobs I have done
+
   while(1)//相比preassign唯一的改动：算得越快，拿得越早
   {
     currentJob=recvAJob();//获得一个任务。 这个函数里面要加锁。
@@ -120,11 +109,9 @@ void printer(outStruct &o){
     printf("\n");
 }
 void* myOutFunc(void* args) {
-  int i=0;
   long int next_id=0;
   while(1)
   {
-    if(i==INPUT_JOB_NUM)  break;//高阶版删除。
     sem_wait(&out_full); 
     pthread_mutex_lock(&out_mutex);
 
@@ -132,7 +119,6 @@ void* myOutFunc(void* args) {
     if(iter!=out.end())
     {
       printer(iter->second);
-      i++;
       next_id++;
       out.erase(iter);
     }  
