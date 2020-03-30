@@ -112,23 +112,36 @@ void* mysolve(void* args) {
   }  
   para->numOfsolve=sum;
 }
+void printer(outStruct &o){
+  printf("No: %d have been solved:", o.id);
+    for(int i=0;i<81;i++){
+        printf("%d",o.board[i]);
+    }
+    printf("\n");
+}
 void* myOutFunc(void* args) {
   int i=0;
+  long int next_id=0;
   while(1)
   {
     if(i==INPUT_JOB_NUM)  break;//高阶版删除。
     sem_wait(&out_full); 
     pthread_mutex_lock(&out_mutex);
 
-    //思路：一个变量记录当前需要输入的id，有再输出。
-    outStruct o=out.front();
-    out.pop();
-    printf("No: %d have been solved:", o.id);
-    for(int i=0;i<81;i++){
-        printf("%d",o.board[i]);
+    map<long int,outStruct>::iterator iter=out.find(next_id);
+    if(iter!=out.end())
+    {
+      printer(iter->second);
+      i++;
+      next_id++;
+      out.erase(iter);
+    }  
+    else
+    {     
+      pthread_mutex_unlock(&out_mutex);
+      sem_post(&out_full); 
+      continue;
     }
-    printf("\n");
-    i++;    
 
     pthread_mutex_unlock(&out_mutex);
     sem_post(&out_empty); 

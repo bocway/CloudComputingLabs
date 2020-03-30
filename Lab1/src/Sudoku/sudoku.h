@@ -3,6 +3,7 @@
 #include<queue>
 #include <pthread.h>
 #include <semaphore.h> 
+#include <map>
 using namespace std;
 const bool DEBUG_MODE = false;
 enum { ROW=9, COL=9, N = 81, NEIGHBOR = 20 };
@@ -36,7 +37,7 @@ const int NUM = 9;
 // extern int nspaces;
 //extern int (*chess)[COL];
 extern queue<boardStruct> q;
-extern queue<outStruct> out;
+extern map<long int,outStruct>  out;
 
 void init_neighbors();
 void input(const char in[N]);

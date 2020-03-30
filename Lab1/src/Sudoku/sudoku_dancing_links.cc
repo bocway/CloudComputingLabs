@@ -267,7 +267,7 @@ bool solve_sudoku_dancing_links(boardStruct boar)
         }
     sem_wait(&out_empty); 
     pthread_mutex_lock(&out_mutex);
-    out.push(o);
+    out.insert(pair<int,outStruct>(boar.id,o));
     pthread_mutex_unlock(&out_mutex);
     sem_post(&out_full); 
     return true;
@@ -276,7 +276,7 @@ bool solve_sudoku_dancing_links(boardStruct boar)
     o.finish=false;
     sem_wait(&out_empty); 
     pthread_mutex_lock(&out_mutex);
-    out.push(o);
+    out.insert(pair<int,outStruct>(boar.id,o));
     pthread_mutex_unlock(&out_mutex);
     sem_post(&out_full); 
     return false;

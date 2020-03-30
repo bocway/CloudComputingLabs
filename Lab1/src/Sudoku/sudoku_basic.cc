@@ -15,7 +15,7 @@ using namespace std;
 //int (*chess)[COL] = (int (*)[COL])board;
 
 queue<boardStruct> q;
-queue<outStruct> out;
+map<long int,outStruct> out;
 sem_t out_full; 
 sem_t out_empty; 
 pthread_mutex_t out_mutex;

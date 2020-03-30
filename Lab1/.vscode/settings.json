@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "__mutex_base": "cpp",
+        "__config": "cpp",
+        "__tuple": "cpp",
+        "istream": "cpp",
+        "locale": "cpp",
+        "unordered_map": "cpp",
+        "map": "cpp",
+        "hash_map": "cpp",
+        "queue": "cpp"
+    }
+}
