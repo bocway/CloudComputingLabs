@@ -1,10 +1,10 @@
 CXXFLAGS+=-O2 -ggdb -DDEBUG
 CXXFLAGS+=-Wall -Wextra
 
-all: sudoku
+all: sudoku_solve
 
-sudoku: main.cc neighbor.cc sudoku_basic.cc sudoku_dancing_links.cc -lpthread
+sudoku_solve: main.cc neighbor.cc sudoku_basic.cc sudoku_dancing_links.cc -lpthread
 	sudo g++ -O2 -o $@ $^ 
 
 clean:
-	$(RM) sudoku
+	$(RM) sudoku_solve
