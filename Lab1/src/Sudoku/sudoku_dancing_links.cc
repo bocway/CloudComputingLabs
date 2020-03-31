@@ -193,7 +193,7 @@ struct Dance
         c->left->right = c;
     }
 
-    bool solve(int id)
+    bool solve()
     {
         if (root_->left == root_) {
             for (size_t i = 0; i < stack_.size(); ++i) {
@@ -222,7 +222,7 @@ struct Dance
             for (Node* j = row->right; j != row; j = j->right) {
                 cover(j->col);
             }
-            if (solve(id)) {
+            if (solve()) {
                 return true;
             }
             stack_.pop_back();
@@ -258,13 +258,13 @@ bool solve_sudoku_dancing_links(boardStruct boar)
   Dance d(boar.board);
   outStruct o;
   o.id=boar.id;
-  if(d.solve(boar.id))
+  if(d.solve())
   {      
     //memcpy(o.board,d.inout_,sizeof(o.board));
     o.finish=true;
-        for(int i=0;i<81;i++){
-            o.board[i]=d.inout_[i];
-        }
+    for(int i=0;i<81;i++){
+        o.board[i]=d.inout_[i];
+    }
     sem_wait(&out_empty); 
     pthread_mutex_lock(&out_mutex);
     out.insert(pair<long int,outStruct>(boar.id,o));

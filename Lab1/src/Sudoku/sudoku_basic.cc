@@ -48,13 +48,10 @@ void input(const char in[N])
   sem_wait(&in_empty); 
   pthread_mutex_lock(&in_mutex);
   q.push(b);
-  printf("id %d has been append\n",b.id);
+//  if(DEBUG_MODE)
+    printf("id %d has been append\n",b.id);
   pthread_mutex_unlock(&in_mutex);
-  sem_post(&in_full); 
-  
-
-
-  
+  sem_post(&in_full);   
 }
 
 // bool available(int guess, int cell)

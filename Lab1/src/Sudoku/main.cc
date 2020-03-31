@@ -14,7 +14,7 @@
 
 #define INPUT_JOB_NUM 30
 int nextJobToBeDone=0;
-int debug=1;
+int debug=0;
 char puzzle[128];
 int total_solved = 0;
 int total = 0;
@@ -48,8 +48,15 @@ boardStruct recvAJob()
 
   sem_wait(&in_full); 
   pthread_mutex_lock(&in_mutex);
-  currentJob=q.front();
-  q.pop();
+  if(q.size()!=0)
+  {
+    currentJob=q.front();
+    q.pop();
+    if(debug)
+      printf("worker get num %d \n",currentJob.id);
+  } 
+  else currentJob.finish=true;//暂时结束
+
   pthread_mutex_unlock(&in_mutex);
   sem_post(&in_empty); 
   
@@ -80,19 +87,21 @@ void* mysolve(void* args) {
     currentJob=recvAJob();//获得一个任务。 这个函数里面要加锁。
     if(currentJob.finish)//All job done!
     {
+        sleep(1000);
         if(debug)
           printf("worker finish \n");
-        break;
+        //break;
     }
       
-    if(debug)
-      printf("worker get num %d \n",currentJob.id);
+    
     // whichJobIHaveDone[numOfJobsIHaveDone]=currentJobID;
     // numOfJobsIHaveDone++;
 
     if(solve_sudoku_dancing_links(currentJob))
     {
       sum++;
+      if(debug)
+          printf("No: %d have been solved!\n", currentJob.id);
     }
     else {//haven‘t sloved this sudoku
         if(debug)
@@ -102,7 +111,8 @@ void* mysolve(void* args) {
   para->numOfsolve=sum;
 }
 void printer(outStruct &o){
-  printf("No: %d have been solved:", o.id);
+  if(debug)
+    printf("No: %d :", o.id);
     for(int i=0;i<81;i++){
         printf("%d",o.board[i]);
     }
@@ -142,11 +152,11 @@ int main(int argc, char* argv[])
     numOfWorkerThread=atoi(argv[2]);
 
   sem_init(&out_full, 0, 0); 
-  sem_init(&out_empty, 0, 30); 
+  sem_init(&out_empty, 0, 10000); 
   pthread_mutex_init(&out_mutex,NULL);
 
   sem_init(&in_full, 0, 0); 
-  sem_init(&in_empty, 0, 30); 
+  sem_init(&in_empty, 0, 10000); 
   pthread_mutex_init(&in_mutex,NULL); 
 
   int64_t start = now();
@@ -192,7 +202,8 @@ int main(int argc, char* argv[])
     total_solved=total_solved+thPara[i].numOfsolve;
   int64_t end = now();
   double sec = (end-start)/1000000.0;
-  printf("%f sec %f ms each %d\n", sec, 1000*sec/total, total_solved);
+  if(debug)
+    printf("%f sec %f ms each %d\n", sec, 1000*sec/total, total_solved);
 
   sem_destroy(&in_full); 
   sem_destroy(&in_empty); 
