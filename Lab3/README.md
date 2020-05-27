@@ -337,6 +337,14 @@ In the basic version, there will be **no participant failures**. Also, we will *
 
 Your program should run correctly with 3 or more participants.
 
+你的程序应该完成“3.1-3.4节”中描述的所有任务。如前所述，要求您的系统正确接收和执行KV命令，并回复相应的结果。
+
+在基本版本中，将不会有**参与者失败**。此外，我们将**不注入任何网络故障**。然而，网络仍然可能偶尔丢弃数据包。您可以使用TCP来处理这种偶尔的下降。
+
+**协调器进程可能会被杀死，并在任何时候多次重启**。因此，不要在协调器中存储任何数据库数据。协调器将在工作时处理客户端的KV命令。当协调器被杀死时，系统不需要响应任何客户机的命令。客户端将保持重新传输其KV命令，直到它从协调器获得成功响应。协调器不记得任何历史记录(除了配置文件中的信息之外)，因此在重新启动后，它将把所有命令作为新命令处理。
+
+您的程序应该在3个或更多参与者的情况下正确运行。
+
 #### 3.5.2 Advanced version
 
 Your program should complete all the tasks described in `section 3.1-3.4`. Your system is required to correctly receive and conduct the KV commands, and reply the corresponding results, as described before.  

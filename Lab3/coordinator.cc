@@ -1,5 +1,5 @@
 #include "coordinator.h"
-coordinator::coordinator(string ip,string port)
+coordinator::coordinator(Socket co_,vector<Socket> pa_list)
 {
     printf("create a coordinator with ip and port\n");
 }

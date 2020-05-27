@@ -4,10 +4,11 @@
 class coordinator
 {
     private:
-        string ip;
-        string port;
+        Socket socketInfo;
+        vector<Socket> pa_list;
     public:
-        coordinator(string ip,string port);//create coordinator with ip and port
+        coordinator(Socket co_,vector<Socket> pa_list);//创建协调者，并与多个参与者建立连接。
+        void RequestToParticipant();//将请求发送给参与者
 };
 
 #endif
