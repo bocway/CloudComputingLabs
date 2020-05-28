@@ -54,21 +54,13 @@ static struct option long_options[] =
 }; 
 int main(int argc, char* argv[])
 {
-  //詹总:获取参数并解析，构建相应的对象。需要完成两个构造函数的实现。
-
-  //若协调者:
-  Socket co_;
-  vector<Socket> pa_list; 
-  coordinator b(co_,pa_list);
-
-  //若参与者:
-  Socket pa_;
-  participant a(pa_);
-  int opt;
+    int opt;
     int digit_optind = 0;
     int option_index = 0;
     char *string2 = "a::b:c:d";
-    
+    int mode=0;//模式 1为协调者，2为参与者。
+    vector<Socket> pa_list; 
+    Socket co_; 
     while((opt =getopt_long_only(argc,argv,string2,long_options,&option_index))!= -1)
     {  
         //printf("optarg = %s",optarg);
@@ -82,33 +74,46 @@ int main(int argc, char* argv[])
       {
         if(s[0]=='!')
           continue;
-        else if(s[0]=='m')
+        vector<string> words=mysplit(s," ");        
+        if(words[0]=="mode")
         {
-          int location = 0;
-          char flag = '0';
-          for(int i=0;i<s.length();i++)
+            if(words[1]=="coordinator")  mode=1;
+            else if(words[1]=="participant") mode=2;
+            else cout<<"get error mode";
+        }
+        else//获取info
+        {
+          vector<string> sockInfo=mysplit(words[1],":");
+          if(words[0]=="participant_info")
           {
-            if(s[i]==' ')
-              flag = 1;
-            else if(flag==1)
-              {flag = s[i];break;}
+              Socket pa_;
+              pa_.IP=sockInfo[0];
+              pa_.port=sockInfo[1];
+              pa_list.push_back(pa_);
           }
-          if(flag == 'h')
-            //system("./helloworld");    
-            cout<<"run!";     
-        }        
-        //system("./helloworld");
-              //cout<<s<<endl;
-        cout<<"run!";   
+          else if(words[0]=="coordinator_info")
+          {
+              co_.IP=sockInfo[0];
+              co_.port=sockInfo[1];  
+          }
+        }       
       }
       infile.close();             //关闭文件输入
+      if(mode==1)//coordinator
+      {
+        coordinator b(co_,pa_list);
+      }
+      else if(mode==2)//participant
+      {
+        participant a(pa_list[0],co_);
+      }
     }
   if(DEBUG)
   {
-      printf("--------------------\n"); 
-      string str=a.MsgAnalyze("*4\r\n$3\r\nSET\r\n$7\r\nCS06142\r\n$5\r\nCloud\r\n$9\r\nComputing\r\n").message;  
-      string str2=a.MsgAnalyze("*2\r\n$3\r\nGET\r\n$7\r\nCS06142\r\n").message;
-      cout<<str<<endl<<str2;
+      // printf("--------------------\n"); 
+      // string str=a.MsgAnalyze("*4\r\n$3\r\nSET\r\n$7\r\nCS06142\r\n$5\r\nCloud\r\n$9\r\nComputing\r\n").message;  
+      // string str2=a.MsgAnalyze("*2\r\n$3\r\nGET\r\n$7\r\nCS06142\r\n").message;
+      // cout<<str<<endl<<str2;
   }
 }
 

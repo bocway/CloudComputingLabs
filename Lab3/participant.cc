@@ -1,8 +1,11 @@
 #include "participant.h"
 #define MAXDATASIZE 100000
-participant::participant(Socket pa_)
+participant::participant(Socket pa_,Socket co_)
 {
-    printf("create a participant with ip and port\n");
+    socketInfo=pa_;
+    CoInfo=co_;
+    cout<<"create a participant "<<socketInfo.IP<<":"<<socketInfo.port<<endl;
+    cout<<"coordinator "<<CoInfo.IP<<":"<<CoInfo.port<<endl;
 }
 MSG participant::MsgAnalyze(string resp)
 //处理resp
