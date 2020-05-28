@@ -1,4 +1,5 @@
 #include "participant.h"
+#define MAXDATASIZE 100000
 participant::participant(Socket pa_)
 {
     printf("create a participant with ip and port\n");
@@ -60,7 +61,17 @@ MSG participant::delate(vector<string> keyList)
 {
     MSG resultMSG={.state=false,.message="-ERROR\r\n"};//初始化
     int delNum=0;
-
+    int len=keyList.size();
+    for(int i=0;i<len;i++)
+    {
+        map<string,string>::iterator iter=database.find(keyList[i]);
+       if(iter!=database.end())//成功删除
+       {
+           delNum++;
+       }
+    }
+    string msg=":"+to_string(delNum)+"\r\n";
+    resultMSG.message=msg;
     return resultMSG;
 }
 MSG participant::get(string key)
@@ -88,3 +99,34 @@ MSG participant::get(string key)
     }
     return resultMSG;
 }
+bool participant::logwriter(string data)
+{
+    this->log.push_back(data);
+    return true;
+}
+// void recmessage(int sockfd){
+// 	while(1){
+// 		int numbytes;
+// 		char buf[MAXDATASIZE];
+		
+// 		if((numbytes = recv(sockfd,buf,MAXDATASIZE,0))==-1){
+// 			perror("recv");
+// 			exit(1);
+// 		}
+// 		buf[numbytes]='\0';
+// 		if(strcmp(buf,"exit")==0){
+// 			printf("Server is closed\n");
+// 			close(sockfd);
+// 			exit(1);
+// 		}              
+// 		printf("Server:%s\n",buf);
+// 	}/*while*/
+// }
+// MSG participant::recvFromCoorinator()
+// {
+//     int so=sockfd;
+//     if((pthread_create(&recthread,NULL,(void*)recmessage,sockfd))!= 0){
+// 		printf("create thread error!\r\n");
+// 		exit(1);
+// 	}
+// }
