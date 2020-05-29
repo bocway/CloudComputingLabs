@@ -7,7 +7,7 @@ participant::participant(Socket pa_,Socket co_)
     cout<<"create a participant "<<socketInfo.IP<<":"<<socketInfo.port<<endl;
     cout<<"coordinator "<<CoInfo.IP<<":"<<CoInfo.port<<endl;
     pa_state=WAIT;
-    recvFromCoorinator();
+    
 }
 MSG participant::recvFromCoorinator()
 {
@@ -125,26 +125,17 @@ MSG participant::get(string key)
     }
     return resultMSG;
 }
-bool participant::logwriter(string data)
+bool participant::logwriter(string data)//向日志文件写入一行。
 {
-    FILE* fp_ = NULL;
-    char *buf_;
-    char* p_;
-    fp_ = fopen("/home/guolab/bowei/log/tf_debug_grpc.log", "w+");
-    if (!fp_) {
-      fprintf(fp_, "Can't open target file.\n");
+    ofstream fileW;
+    fileW.open("./log/test.log",ios::app);//打开文件，用于在其尾部添加数据。如果文件不存在，则新建该文件。
+    if(fileW.is_open())
+    {
+        fileW<<data<<"\n";
+        fileW.close();
     }
-    int file_size = p_ - buf_;
-    #define BLOCK_SIZE 1024
-    int i;
-    for (i = 0; i < file_size/BLOCK_SIZE; i++) {
-        fwrite(buf_ + i*BLOCK_SIZE, sizeof(char), BLOCK_SIZE, fp_);
-    }
-    int remainder = file_size - (BLOCK_SIZE * i);
-    fwrite(buf_ + i*BLOCK_SIZE, sizeof(char), remainder, fp_);
-    
-    free(buf_);
-    fclose(fp_);
+    else {cout<<"open error";}//有时候系统没有权限打开文件。
+
 }
 bool participant::recovery()
 {

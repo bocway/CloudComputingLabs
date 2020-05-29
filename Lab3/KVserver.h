@@ -16,6 +16,7 @@
 
 #include <sys/stat.h>
 #include <iostream>
+#include <fstream>
 //STL
 #include <cstring>
 #include <map>
@@ -27,7 +28,7 @@
 #include <pthread.h>
 #include <queue>
 using namespace std;
-
+enum STATE {init,live,zombie,recovery,WAIT,READY,DONE,RECOVERY};
 struct MSG{
     bool state;
     string message;
@@ -37,7 +38,13 @@ struct Socket{
     string IP;
     int port;
 };
-enum STATE {WAIT,READY,DONE,RECOVERY};
+struct TaskTableItem{
+    int TaskId;
+    int64_t TimeStamp;
+    STATE TaskState;
+};
+
 vector<string> mysplit(string str,string pattern);
+int64_t now();
 
 #endif
