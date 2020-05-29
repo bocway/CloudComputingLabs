@@ -16,9 +16,16 @@
 
 #include <sys/stat.h>
 #include <iostream>
+//STL
 #include <cstring>
 #include <map>
 #include <vector>
+//socket
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <sys/wait.h>
+#include <pthread.h>
+#include <queue>
 using namespace std;
 
 struct MSG{
@@ -28,8 +35,9 @@ struct MSG{
 const MSG errorMSG={.state=false,.message="-ERROR\r\n"};
 struct Socket{
     string IP;
-    string port;
+    int port;
 };
+enum STATE {WAIT,READY,DONE,RECOVERY};
 vector<string> mysplit(string str,string pattern);
 
 #endif

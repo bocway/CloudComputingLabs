@@ -6,6 +6,29 @@ participant::participant(Socket pa_,Socket co_)
     CoInfo=co_;
     cout<<"create a participant "<<socketInfo.IP<<":"<<socketInfo.port<<endl;
     cout<<"coordinator "<<CoInfo.IP<<":"<<CoInfo.port<<endl;
+    pa_state=WAIT;
+    recvFromCoorinator();
+}
+MSG participant::recvFromCoorinator()
+{
+    int pa_sock=SocketApi::Socket();
+    SocketApi::Bind(pa_sock,socketInfo.port);
+    SocketApi::Listen(pa_sock);
+    while(1)
+	{
+       std::string peer_ip;
+       int peer_port;
+       int sock = SocketApi::Accept(pa_sock,peer_ip,peer_port);   
+       std::cout << "part_sock :" << sock <<std::endl;
+       if(sock>= 0)
+       {
+       	  std::cout << peer_ip << " : " << peer_port <<std::endl;
+          Connect* part_conn = new Connect(pa_sock);
+          string line;
+          part_conn->RecvLine(sock,line);
+          cout<<"participant recv and finish the request:"<<MsgAnalyze(line).message<<endl;
+       }
+	}
 }
 MSG participant::MsgAnalyze(string resp)
 //处理resp
@@ -104,32 +127,26 @@ MSG participant::get(string key)
 }
 bool participant::logwriter(string data)
 {
-    this->log.push_back(data);
-    return true;
+    FILE* fp_ = NULL;
+    char *buf_;
+    char* p_;
+    fp_ = fopen("/home/guolab/bowei/log/tf_debug_grpc.log", "w+");
+    if (!fp_) {
+      fprintf(fp_, "Can't open target file.\n");
+    }
+    int file_size = p_ - buf_;
+    #define BLOCK_SIZE 1024
+    int i;
+    for (i = 0; i < file_size/BLOCK_SIZE; i++) {
+        fwrite(buf_ + i*BLOCK_SIZE, sizeof(char), BLOCK_SIZE, fp_);
+    }
+    int remainder = file_size - (BLOCK_SIZE * i);
+    fwrite(buf_ + i*BLOCK_SIZE, sizeof(char), remainder, fp_);
+    
+    free(buf_);
+    fclose(fp_);
 }
-// void recmessage(int sockfd){
-// 	while(1){
-// 		int numbytes;
-// 		char buf[MAXDATASIZE];
-		
-// 		if((numbytes = recv(sockfd,buf,MAXDATASIZE,0))==-1){
-// 			perror("recv");
-// 			exit(1);
-// 		}
-// 		buf[numbytes]='\0';
-// 		if(strcmp(buf,"exit")==0){
-// 			printf("Server is closed\n");
-// 			close(sockfd);
-// 			exit(1);
-// 		}              
-// 		printf("Server:%s\n",buf);
-// 	}/*while*/
-// }
-// MSG participant::recvFromCoorinator()
-// {
-//     int so=sockfd;
-//     if((pthread_create(&recthread,NULL,(void*)recmessage,sockfd))!= 0){
-// 		printf("create thread error!\r\n");
-// 		exit(1);
-// 	}
-// }
+bool participant::recovery()
+{
+
+}

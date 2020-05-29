@@ -88,13 +88,13 @@ int main(int argc, char* argv[])
           {
               Socket pa_;
               pa_.IP=sockInfo[0];
-              pa_.port=sockInfo[1];
+              pa_.port=stoi(sockInfo[1]);
               pa_list.push_back(pa_);
           }
           else if(words[0]=="coordinator_info")
           {
               co_.IP=sockInfo[0];
-              co_.port=sockInfo[1];  
+              co_.port=stoi(sockInfo[1]);  
           }
         }       
       }

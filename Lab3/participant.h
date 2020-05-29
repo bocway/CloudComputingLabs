@@ -1,14 +1,15 @@
 #ifndef PARTICIPANT_H
 #define PARTICIPANT_H
 #include "KVserver.h"
-
+#include "protocolutil.h"
 class participant
 {
     private:
         Socket socketInfo;
         Socket CoInfo;
         vector<string> log;
-        int sockfd;
+        STATE pa_state;
+        
         pthread_t recthread;
         map<string,string> database;//本地数据库
         MSG set(string key,string value);//对本地数据库进行set操作
@@ -19,6 +20,7 @@ class participant
         MSG recvFromCoorinator();
         MSG MsgAnalyze(string resp);//解析协调者发送的命令
         bool logwriter(string data);
+        bool recovery();
 
 };
 

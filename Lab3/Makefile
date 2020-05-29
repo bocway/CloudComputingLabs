@@ -3,7 +3,7 @@ CXXFLAGS+=-Wall -Wextra
 
 all: kvstore2pcsystem
 
-kvstore2pcsystem: main.cc participant.cc coordinator.cc -lpthread
+kvstore2pcsystem: main.cc participant.cc coordinator.cc protocolutil.cc -lpthread
 	sudo g++ -O2 -o $@ $^ 
 
 clean:
