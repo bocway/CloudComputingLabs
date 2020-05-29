@@ -15,11 +15,11 @@
 #include<errno.h>
 #include<fstream> 
 #include<map>
-#include "write_log.hpp"
+
 #define NORMAL 0
 #define WARNING 1
 #define ERROR 2
-
+#include "KVserver.h"
 #define BACKLOG 5
 #define BUFF_NUM 1024
 #define MAX_PARTICIPANT 5
