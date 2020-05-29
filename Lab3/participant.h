@@ -10,7 +10,6 @@ class participant
         vector<string> log;
         STATE pa_state;
         int TaskId;
-        string logName;
         pthread_t recthread;
         map<string,string> database;//本地数据库
         MSG set(string key,string value);//对本地数据库进行set操作
@@ -21,8 +20,8 @@ class participant
         MSG recvFromCoorinator();
         MSG MsgAnalyze(string resp);//解析协调者发送的命令
         bool logwriter(string data);
-        void heart();
-        bool recovery();
+        void heart();//向协调者发送心跳，待实现。
+        bool recovery();//恢复状态，待实现。
 
 };
 
