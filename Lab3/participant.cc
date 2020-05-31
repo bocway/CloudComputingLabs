@@ -28,16 +28,19 @@ MSG participant::recvFromCoorinator()
           part_conn->RecvLine(sock,line);
           logwriter(to_string(TaskId)+" REQUEST "+line);//接到请求，写日志。
           MSG msgResult=MsgAnalyze(line);//对操作进行处理，得到处理结果。
-          if(msgResult.state)//得到正确处理结果。
-          {
-              cout<<"participant recv and finish the request:"<<msgResult.message<<endl;
-              logwriter("FINISH "+line);//完成任务，写日志。
-          }
-          else
-          {
-              cout<<"participant recv and ABORT the request:"<<line<<endl;
-              logwriter("ABORT "+line);
-          }
+
+          cout<<"participant recv and finish the request:"<<msgResult.message<<endl;
+          logwriter("FINISH "+line);//完成任务，写日志。
+        //   if(msgResult.state)//得到正确处理结果。
+        //   {
+        //       cout<<"participant recv and finish the request:"<<msgResult.message<<endl;
+        //       logwriter("FINISH "+line);//完成任务，写日志。
+        //   }
+        //   else
+        //   {
+        //       cout<<"participant recv and ABORT the request:"<<line<<endl;
+        //       logwriter("ABORT "+line);
+        //   }
           part_conn->sendLine(sock,msgResult.message);
           
        }
@@ -142,14 +145,15 @@ MSG participant::get(string key)
 }
 bool participant::logwriter(string data)//向日志文件写入一行。
 {
-    ofstream fileW;
-    fileW.open("./log/participant"+to_string(socketInfo.port)+".log",ios::app);//打开文件，用于在其尾部添加数据。如果文件不存在，则新建该文件。
-    if(fileW.is_open())
-    {
-        fileW<<data<<"\n";
-        fileW.close();
-    }
-    else {cout<<"open error";}//有时候系统没有权限打开文件。
+    // ofstream fileW;
+    // fileW.open("./log/participant"+to_string(socketInfo.port)+".log",ios::app);//打开文件，用于在其尾部添加数据。如果文件不存在，则新建该文件。
+    // if(fileW.is_open())
+    // {
+    //     fileW<<data<<"\n";
+    //     fileW.close();
+    // }
+    // else {cout<<"open error";}//有时候系统没有权限打开文件。
+    log.push_back(data);
 }
 bool participant::recovery()
 {

@@ -113,17 +113,36 @@ void coordinator::recvFromClient()
 }
 bool coordinator::logwriter(string data)//向日志文件写入一行。
 {
-    ofstream fileW;
-    fileW.open("./log/coordinator"+to_string(socketInfo.port)+".log",ios::app);//打开文件，用于在其尾部添加数据。如果文件不存在，则新建该文件。
-    //在文件夹下运行./kill.sh 将清空所有日志文件。
-    if(fileW.is_open())
-    {
-        fileW<<data<<"\n";
-        fileW.close();
-    }
-    else {cout<<"open error";}//有时候系统没有权限打开文件。
+    // ofstream fileW;
+    // fileW.open("./log/coordinator"+to_string(socketInfo.port)+".log",ios::app);//打开文件，用于在其尾部添加数据。如果文件不存在，则新建该文件。
+    // //在文件夹下运行./kill.sh 将清空所有日志文件。
+    // if(fileW.is_open())
+    // {
+    //     fileW<<data<<"\n";
+    //     fileW.close();
+    // }
+    // else {cout<<"open error";}//有时候系统没有权限打开文件。
+    log.push_back(data);
 }
 void coordinator::recvHeart()
 {
-    
+    int co_sock=SocketApi::Socket();
+    SocketApi::Bind(co_sock,socketInfo.port,socketInfo.IP);
+    SocketApi::Listen(co_sock);
+    while(1)
+	{
+       std::string peer_ip;
+       int peer_port;
+       int sock = SocketApi::Accept(co_sock,peer_ip,peer_port);   
+       std::cout << "part_sock :" << sock <<std::endl;
+       if(sock>= 0)
+       {
+       	  std::cout << peer_ip << " : " << peer_port <<std::endl;
+          Connect* part_conn = new Connect(co_sock);
+          string line;//接收到到字符串
+          part_conn->RecvLine(sock,line);
+
+          
+       }
+	}
 }

@@ -24,7 +24,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/wait.h>
+//mutex and thread
 #include <pthread.h>
+#include <semaphore.h> 
 
 using namespace std;
 enum STATE {init,live,zombie,recovery,WAIT,READY,DONE,RECOVERY};

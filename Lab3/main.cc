@@ -102,9 +102,9 @@ int main(int argc, char* argv[])
       if(mode==1)//coordinator
       {
         coordinator b(co_,pa_list);
-        //b.RequestToParticipant("*4\r\n$3\r\nSET\r\n$7\r\nCS06142\r\n$5\r\nCloud\r\n$9\r\nComputing\r\n");
-        b.RequestToParticipant("*2\r\n$3\r\nGET\r\n$7\r\nCS06142\r\n");
-        cout<<"123";
+        // b.RequestToParticipant("*4\r\n$3\r\nSET\r\n$7\r\nCS06142\r\n$5\r\nCloud\r\n$9\r\nComputing\r\n");
+        // b.RequestToParticipant("*2\r\n$3\r\nGET\r\n$7\r\nCS06142\r\n");
+        b.recvFromClient();
       }
       else if(mode==2)//participant
       {

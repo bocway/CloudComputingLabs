@@ -8,6 +8,7 @@ class coordinator
         Socket socketInfo;
         vector<Socket> pa_list;
         vector<TaskTableItem> TaskTable;//刘总所需要的状态表。
+        vector<string> log;
         STATE co_state;
         int TaskId;
     public:

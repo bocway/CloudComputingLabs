@@ -11,6 +11,7 @@ class participant
         STATE pa_state;
         int TaskId;
         pthread_t recthread;
+
         map<string,string> database;//本地数据库
         MSG set(string key,string value);//对本地数据库进行set操作
         MSG delate(vector<string> keyList);//对本地数据库进行delate操作
