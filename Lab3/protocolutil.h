@@ -31,7 +31,7 @@ class SocketApi
 {
     public:
     	static int Socket();
-    	static void Bind(int sock,int port);
+    	static void Bind(int sock,int port,std::string SERV_ADDR);
     	static void Listen(int sock);
     	static int Accept(int listen_sock,std::string& ip,int &port);
     	static int Connect_sock(std::string SERV_ADDR,int SERV_PORT);	

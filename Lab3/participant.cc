@@ -12,7 +12,7 @@ participant::participant(Socket pa_,Socket co_)
 MSG participant::recvFromCoorinator()
 {
     int pa_sock=SocketApi::Socket();
-    SocketApi::Bind(pa_sock,socketInfo.port);
+    SocketApi::Bind(pa_sock,socketInfo.port,socketInfo.IP);
     SocketApi::Listen(pa_sock);
     while(1)
 	{
@@ -24,9 +24,22 @@ MSG participant::recvFromCoorinator()
        {
        	  std::cout << peer_ip << " : " << peer_port <<std::endl;
           Connect* part_conn = new Connect(pa_sock);
-          string line;
+          string line;//接收到到字符串
           part_conn->RecvLine(sock,line);
-          cout<<"participant recv and finish the request:"<<MsgAnalyze(line).message<<endl;
+          logwriter(to_string(TaskId)+" REQUEST "+line);//接到请求，写日志。
+          MSG msgResult=MsgAnalyze(line);//对操作进行处理，得到处理结果。
+          if(msgResult.state)//得到正确处理结果。
+          {
+              cout<<"participant recv and finish the request:"<<msgResult.message<<endl;
+              logwriter("FINISH "+line);//完成任务，写日志。
+          }
+          else
+          {
+              cout<<"participant recv and ABORT the request:"<<line<<endl;
+              logwriter("ABORT "+line);
+          }
+          part_conn->sendLine(sock,msgResult.message);
+          
        }
 	}
 }
@@ -98,6 +111,7 @@ MSG participant::delate(vector<string> keyList)
     }
     string msg=":"+to_string(delNum)+"\r\n";
     resultMSG.message=msg;
+    resultMSG.state=true;
     return resultMSG;
 }
 MSG participant::get(string key)
@@ -122,6 +136,7 @@ MSG participant::get(string key)
         }
         msg=msg+"\r\n";
         resultMSG.message=msg;
+        resultMSG.state=true;
     }
     return resultMSG;
 }

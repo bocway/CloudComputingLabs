@@ -19,14 +19,14 @@ int SocketApi::Socket()
 	setsockopt(sock,SOL_SOCKET,SO_REUSEADDR,&opt,sizeof(opt));
 	return sock;
 }
-void SocketApi::Bind(int sock,int port)
+void SocketApi::Bind(int sock,int port,std::string SERV_ADDR)
 {
 	std::cout << "bind is ready..." << std::endl;
 	struct sockaddr_in local;
 	bzero(&local,sizeof(local));
 	local.sin_family = AF_INET;
 	local.sin_port = htons(port);
-	local.sin_addr.s_addr = htonl(INADDR_ANY);
+	local.sin_addr.s_addr = inet_addr(SERV_ADDR.c_str());
 
 	if(bind(sock,(struct sockaddr*)&local,sizeof(local)) < 0)
 	{

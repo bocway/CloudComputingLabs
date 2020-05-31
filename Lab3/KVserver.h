@@ -6,8 +6,6 @@
 #include<string.h>
 #include<errno.h>
 #include<sys/types.h>
-#include<sys/socket.h>
-#include<netinet/in.h>
 #include<unistd.h>
 #include <pthread.h>
 
@@ -21,15 +19,16 @@
 #include <cstring>
 #include <map>
 #include <vector>
+#include <queue>
 //socket
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/wait.h>
 #include <pthread.h>
-#include <queue>
+
 using namespace std;
 enum STATE {init,live,zombie,recovery,WAIT,READY,DONE,RECOVERY};
-struct MSG{
+struct MSG{//state代表连接状态，false为连接失败。message为要传输的信息。
     bool state;
     string message;
 };
@@ -43,6 +42,12 @@ struct TaskTableItem{
     int64_t TimeStamp;
     STATE TaskState;
 };
+typedef struct {
+   int socket;
+   string msg;
+   bool state;
+   string returnMSG;
+} ThreadParas;
 
 vector<string> mysplit(string str,string pattern);
 int64_t now();
