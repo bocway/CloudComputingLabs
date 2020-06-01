@@ -16,24 +16,48 @@ coordinator::coordinator(Socket co_,vector<Socket> pa_list)
 void* oneRequest(void* args)//void创建不了线程- -
 {
     ThreadParas* para = (ThreadParas*) args;
-    int socket=para->socket;
+    //int socket=para->socket;
     string msg=para->msg;
-    para->state=false;
-    para->returnMSG="-ERROR\r\n";
-    Connect* conn = new Connect(socket);
-    if(!conn->sendLine(socket,msg))
-    {
-        cout<<"send faild!";
-    }
+    
+    Socket socketInfo=para->socketMSG;
+    //int socket=SocketApi::Connect_sock(socketInfo.IP,socketInfo.port);//把创建socket的过程也放里面了。返回创建的用于connect的socket
+    cout << "connect is ready...." << std::endl;
 
-    string respone;
-    if(conn->RecvLine(socket,respone))//收到请求。
+    struct sockaddr_in serverAdd;
+
+    bzero(&serverAdd, sizeof(serverAdd));
+    serverAdd.sin_family = AF_INET;
+    serverAdd.sin_addr.s_addr = inet_addr(socketInfo.IP.c_str());
+    serverAdd.sin_port = htons(socketInfo.port);
+    
+    int connfd = socket(AF_INET, SOCK_STREAM, 0);
+ 
+    int connResult = connect(connfd, (struct sockaddr *)&serverAdd, sizeof(serverAdd));
+    if (connResult < 0) 
     {
-        cout<<"get response from participant:"<<respone<<endl;
-        para->returnMSG=respone;
-        para->msg=true;
+        cout << "connect error" << std::endl;
+        para->state=false;
+        para->returnMSG="-ERROR\r\n";
+    }  
+    else
+    {
+        Connect* conn = new Connect(connfd);
+        if(!conn->sendLine(connfd,msg))
+        {
+            cout<<"send faild!";
+            para->state=false;
+            para->returnMSG="-ERROR\r\n";
+        }
+        string respone;
+        if(conn->RecvLine(connfd,respone))//收客户端回复到请求。
+        {
+            cout<<"get response from participant:"<<respone<<endl;
+            para->returnMSG=respone;
+            para->state=true;
+        }
+        close(connfd);
     }
-    close(socket);
+    
 }
 MSG coordinator::RequestToParticipant(string msg)//将请求发送给参与者,协调者负责主动连接参与者。
 {
@@ -45,10 +69,11 @@ MSG coordinator::RequestToParticipant(string msg)//将请求发送给参与者,�
     MSG returnMSG={.state=false,.message="-ERROR\r\n"};
     for(int i=0;i<len;i++)
     {
-        connfd[i]=SocketApi::Connect_sock(pa_list[i].IP,pa_list[i].port);//把创建socket的过程也放里面了。返回创建的用于connect的socket
+        //connfd[i]=SocketApi::Connect_sock(pa_list[i].IP,pa_list[i].port);//把创建socket的过程也放里面了。返回创建的用于connect的socket
         ThreadParas req_args;
         req_Para[i].msg=msg;
-        req_Para[i].socket=connfd[i];
+        //req_Para[i].socket=connfd[i];
+        req_Para[i].socketMSG=pa_list[i];
         //pthread_create(&req_th[i], NULL, oneRequest, &req_Para[i]);
         if(pthread_create(&req_th[i], NULL, oneRequest, &req_Para[i])!=0)//create thread
         {
@@ -60,6 +85,7 @@ MSG coordinator::RequestToParticipant(string msg)//将请求发送给参与者,�
         pthread_join(req_th[i],NULL);
     for(int i=0;i<len;i++)
     {
+        cout<<"线程回复:"<<req_Para[i].msg<<endl;
         if(!req_Para[i].state)
         {
             //该线程已断开，更改该线程的状态表值。
@@ -70,7 +96,7 @@ MSG coordinator::RequestToParticipant(string msg)//将请求发送给参与者,�
             cout<<"change participant TaskId from "<<TaskTable[i].TaskId<<" to "<<TaskId<<endl;
             TaskTable[i].TaskId=TaskId;
             returnMSG.state=true;
-            returnMSG.message=req_Para[i].msg;
+            returnMSG.message=req_Para[i].returnMSG;
         }     
     }
     co_state=READY;
@@ -122,9 +148,9 @@ int HeartTask::Run()
     {
         heart_conn->RecvLine(connfd,line);
         cout<<"recv heart:"<<line<<endl;
-    }
-        
+    }        
 }
+
 void coordinator::recvHeart()
 {
     int co_sock=SocketApi::Socket();

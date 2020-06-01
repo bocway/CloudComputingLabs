@@ -47,6 +47,7 @@ struct TaskTableItem{
 typedef struct {
    int socket;
    string msg;
+   Socket socketMSG;
    bool state;
    string returnMSG;
 } ThreadParas;

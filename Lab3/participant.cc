@@ -108,9 +108,7 @@ MSG participant::set(string key,string value)//对本地数据库进行set操作
             resultMSG.message="+OK\r\n";//成功。
             return resultMSG;
         }
-    }
-    
-    
+    }   
     return errorMSG;
 }
 MSG participant::delate(vector<string> keyList)
@@ -161,14 +159,6 @@ MSG participant::get(string key)
 }
 bool participant::logwriter(string data)//向日志文件写入一行。
 {
-    // ofstream fileW;
-    // fileW.open("./log/participant"+to_string(socketInfo.port)+".log",ios::app);//打开文件，用于在其尾部添加数据。如果文件不存在，则新建该文件。
-    // if(fileW.is_open())
-    // {
-    //     fileW<<data<<"\n";
-    //     fileW.close();
-    // }
-    // else {cout<<"open error";}//有时候系统没有权限打开文件。
     log.push_back(data);
 }
 string RecvHeartTask::Getdata()
@@ -196,11 +186,21 @@ int RecvHeartTask::Run()
 void participant::heart()
 {
     int heart_sock=SocketApi::Connect_sock(CoInfo.IP,CoInfo.port);//把创建socket的过程也放里面了。返回创建的用于connect的socket
-    CThreadPool Pool(2);
-    RecvHeartTask* ta=new RecvHeartTask;
-    ta->SetConnFd(heart_sock);
-    ta->Setdata(to_string(TaskId));
-    Pool.AddTask(ta);
+    string Heart_msg=to_string(TaskId);
+    Connect* conn = new Connect(heart_sock);
+    while(1)
+    {
+        if(!conn->sendLine(heart_sock,Heart_msg))
+        {
+            cout<<"send faild!";
+        }
+        usleep(500000);
+    }
+    // CThreadPool Pool(2);
+    // RecvHeartTask* ta=new RecvHeartTask;
+    // ta->SetConnFd(heart_sock);
+    // ta->Setdata(to_string(TaskId));
+    // Pool.AddTask(ta);
 }
 bool participant::recovery()
 {
