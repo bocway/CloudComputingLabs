@@ -16,7 +16,9 @@ int SocketApi::Socket()
 		exit(2);
 	}
 	int opt = 1;
-	setsockopt(sock,SOL_SOCKET,SO_REUSEADDR,&opt,sizeof(opt));
+	bool bDontLinger = false;
+
+	setsockopt(sock,SOL_SOCKET,SO_REUSEADDR,(const char*)&bDontLinger,sizeof(bool));
 	return sock;
 }
 void SocketApi::Bind(int sock,int port,std::string SERV_ADDR)
@@ -101,12 +103,12 @@ bool Connect::RecvLine(int sock_,std::string& line)
 	ssize_t s = recv(sock_,buff,BUFF_NUM,0);
     buff[strlen(buff)] = '\0';
     line = buff;
-    std::cout<<"recv line:" << line <<" s:"<<s<<std::endl;
+    std::cout<<"recv line:" << line <<" size:"<<s<<std::endl;
     return (s > 0) ? true:false;
 }
 bool Connect::sendLine(int connfd,std::string line)
 {
     ssize_t s = send(connfd,line.c_str(),line.size(),0);
-    std::cout << "send line:" <<line << " s:" <<s <<std::endl;
+    std::cout << "send line:" <<line << " size:" <<s <<std::endl;
     return (s > 0) ? true:false;
 }

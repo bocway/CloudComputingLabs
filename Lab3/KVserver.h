@@ -11,7 +11,6 @@
 
 #include <assert.h>
 #include <stdint.h>
-
 #include <sys/stat.h>
 #include <iostream>
 #include <fstream>
@@ -27,6 +26,7 @@
 //mutex and thread
 #include <pthread.h>
 #include <semaphore.h> 
+#include "Thread.h"
 
 using namespace std;
 enum STATE {init,live,zombie,recovery,WAIT,READY,DONE,RECOVERY};

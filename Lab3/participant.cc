@@ -1,4 +1,5 @@
 #include "participant.h"
+#include "KVserver.h"
 #define MAXDATASIZE 100000
 participant::participant(Socket pa_,Socket co_)
 {
@@ -51,10 +52,11 @@ MSG participant::MsgAnalyze(string resp)
 {
     MSG resultMSG={.state=false,.message="-ERROR\r\n"};//初始化
     vector<string> result=mysplit(resp,"\r\n");
-    // for(int i=0;i<result.size();i++)
-    // {
-    //     cout<<result[i]<<endl;
-    // }
+    for(int i=0;i<result.size();i++)
+    {
+        cout<<result[i]<<endl;
+    }
+    if(result.size()<5) return resultMSG;//错误信息
     if(result[2]=="GET")
     {
         string key=result[4];
@@ -154,6 +156,37 @@ bool participant::logwriter(string data)//向日志文件写入一行。
     // }
     // else {cout<<"open error";}//有时候系统没有权限打开文件。
     log.push_back(data);
+}
+string RecvHeartTask::Getdata()
+{
+    return data;
+}
+void RecvHeartTask::Setdata(string data)
+{
+    this->data=data;
+}
+int RecvHeartTask::Run()
+{
+    int heart_sock=GetConnFd();
+    string Heart_msg=Getdata();
+    Connect* conn = new Connect(heart_sock);
+    while(1)
+    {
+        if(!conn->sendLine(heart_sock,Heart_msg))
+        {
+            cout<<"send faild!";
+        }
+        usleep(500000);
+    }
+}
+void participant::heart()
+{
+    int heart_sock=SocketApi::Connect_sock(CoInfo.IP,CoInfo.port);//把创建socket的过程也放里面了。返回创建的用于connect的socket
+    CThreadPool Pool(2);
+    RecvHeartTask* ta=new RecvHeartTask;
+    ta->SetConnFd(heart_sock);
+    ta->Setdata(to_string(TaskId));
+    Pool.AddTask(ta);
 }
 bool participant::recovery()
 {
