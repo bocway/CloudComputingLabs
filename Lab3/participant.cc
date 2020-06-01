@@ -90,14 +90,27 @@ MSG participant::MsgAnalyze(string resp)
 MSG participant::set(string key,string value)//对本地数据库进行set操作
 {
     MSG resultMSG={.state=false,.message="-ERROR\r\n"};//初始化
-    pair< std::map< string,string >::iterator,bool > ret;
-    ret=database.insert(pair<string,string>(key,value));
-    if(ret.second)
+    map<string,string>::iterator iter=database.find(key);
+    if(iter!=database.end())//有存在的
     {
+        iter->second=value;
         resultMSG.state=true;
         resultMSG.message="+OK\r\n";//成功。
         return resultMSG;
     }
+    else
+    {
+        pair< std::map< string,string >::iterator,bool > ret;
+        ret=database.insert(pair<string,string>(key,value));
+        if(ret.second)
+        {
+            resultMSG.state=true;
+            resultMSG.message="+OK\r\n";//成功。
+            return resultMSG;
+        }
+    }
+    
+    
     return errorMSG;
 }
 MSG participant::delate(vector<string> keyList)
@@ -112,6 +125,7 @@ MSG participant::delate(vector<string> keyList)
        if(iter!=database.end())//成功删除
        {
            delNum++;
+           database.erase(iter);
        }
     }
     string msg=":"+to_string(delNum)+"\r\n";
