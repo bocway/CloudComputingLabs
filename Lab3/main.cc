@@ -18,11 +18,13 @@
 #include "participant.h"
 #define DEBUG 1
 
-int64_t now()
+string getTime()
 {
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  return tv.tv_sec * 1000000 + tv.tv_usec;
+    time_t timep;
+    time (&timep);
+    char tmp[64];
+    strftime(tmp, sizeof(tmp), "%Y-%m-%d %H:%M:%S",localtime(&timep) );
+    return tmp;
 }
 
 //字符串分割函数

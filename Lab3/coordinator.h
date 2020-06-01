@@ -8,7 +8,7 @@ class coordinator
         Socket socketInfo;
         vector<Socket> pa_list;
         vector<TaskTableItem> TaskTable;//刘总所需要的状态表。
-        vector<string> log;
+        vector<LogItem> log;
         STATE co_state;
         int TaskId;
     public:
@@ -16,7 +16,7 @@ class coordinator
         MSG RequestToParticipant(string msg);//将请求发送给参与者
         void recvFromClient();
         void recvHeart();//接收心跳,待实现
-        bool logwriter(string data);
+        bool logwriter(LogItem data);
 };
 
 #endif

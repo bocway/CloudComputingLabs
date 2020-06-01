@@ -11,18 +11,14 @@ coordinator::coordinator(Socket co_,vector<Socket> pa_list)
         TaskTableItem tmp={.TaskId=0,.TimeStamp=0,.TaskState=init};
         TaskTable.push_back(tmp);
     }
-
 }
 void* oneRequest(void* args)//void创建不了线程- -
 {
     ThreadParas* para = (ThreadParas*) args;
-    //int socket=para->socket;
+
     string msg=para->msg;
     
     Socket socketInfo=para->socketMSG;
-    //int socket=SocketApi::Connect_sock(socketInfo.IP,socketInfo.port);//把创建socket的过程也放里面了。返回创建的用于connect的socket
-    cout << "connect is ready...." << std::endl;
-
     struct sockaddr_in serverAdd;
 
     bzero(&serverAdd, sizeof(serverAdd));
@@ -51,7 +47,7 @@ void* oneRequest(void* args)//void创建不了线程- -
         string respone;
         if(conn->RecvLine(connfd,respone))//收客户端回复到请求。
         {
-            cout<<"get response from participant:"<<respone<<endl;
+            //cout<<"get response from participant:"<<respone<<endl;
             para->returnMSG=respone;
             para->state=true;
         }
@@ -85,7 +81,7 @@ MSG coordinator::RequestToParticipant(string msg)//将请求发送给参与者,�
         pthread_join(req_th[i],NULL);
     for(int i=0;i<len;i++)
     {
-        cout<<"线程回复:"<<req_Para[i].msg<<endl;
+        //cout<<"线程回复:"<<req_Para[i].msg<<endl;
         if(!req_Para[i].state)
         {
             //该线程已断开，更改该线程的状态表值。
@@ -93,14 +89,14 @@ MSG coordinator::RequestToParticipant(string msg)//将请求发送给参与者,�
         }
         else
         {
-            cout<<"change participant TaskId from "<<TaskTable[i].TaskId<<" to "<<TaskId<<endl;
+            //cout<<"change participant TaskId from "<<TaskTable[i].TaskId<<" to "<<TaskId<<endl;
             TaskTable[i].TaskId=TaskId;
             returnMSG.state=true;
             returnMSG.message=req_Para[i].returnMSG;
         }     
     }
     co_state=READY;
-    cout<<"request finish!"<<endl;
+    //cout<<"request finish!"<<endl;
     return returnMSG;
 }//此函数需要统计多个线程的值是否正常，是否超时。
 
@@ -123,20 +119,23 @@ void coordinator::recvFromClient()
           part_conn->RecvLine(sock,line);
           cout<<"coordinator recv the request:"<<line<<endl;
           TaskId=TaskId+1;
-          logwriter(to_string(TaskId)+" REQUEST "+line);
+          LogItem logitem={.state="REQUEST",.time="",.TaskId=this->TaskId,.massage=line};
+          logwriter(logitem);
           //处理任务
           MSG msg=RequestToParticipant(line);
           if(msg.state)
           {
-            logwriter(to_string(TaskId)+" FINISH "+line);
+            LogItem logitem={.state="FINISH",.time="",.TaskId=this->TaskId,.massage=line};
+            logwriter(logitem);
           }
           //发回给客户端。
           part_conn->sendLine(sock,msg.message);
        }
 	}
 }
-bool coordinator::logwriter(string data)//向日志文件写入一行。
+bool coordinator::logwriter(LogItem data)//向日志文件写入一行。
 {
+    data.time=getTime();
     log.push_back(data);
 }
 int HeartTask::Run()

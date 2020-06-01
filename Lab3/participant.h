@@ -7,7 +7,7 @@ class participant
     private:
         Socket socketInfo;
         Socket CoInfo;
-        vector<string> log;
+        vector<LogItem> log;
         STATE pa_state;
         int TaskId;
         pthread_t recthread;
@@ -20,10 +20,9 @@ class participant
         participant(Socket pa_,Socket co_);//create participant with ip and port
         MSG recvFromCoorinator();
         MSG MsgAnalyze(string resp);//解析协调者发送的命令
-        bool logwriter(string data);
+        bool logwriter(LogItem data);
         void heart();//向协调者发送心跳，待实现。
         bool recovery();//恢复状态，待实现。
-
 };
 
 #endif

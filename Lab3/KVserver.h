@@ -8,7 +8,7 @@
 #include<sys/types.h>
 #include<unistd.h>
 #include <pthread.h>
-
+#include <time.h>
 #include <assert.h>
 #include <stdint.h>
 #include <sys/stat.h>
@@ -39,6 +39,12 @@ struct Socket{
     string IP;
     int port;
 };
+struct LogItem{
+    string state;
+    string time;
+    int TaskId;
+    string massage;
+};
 struct TaskTableItem{
     int TaskId;
     int64_t TimeStamp;
@@ -53,6 +59,6 @@ typedef struct {
 } ThreadParas;
 
 vector<string> mysplit(string str,string pattern);
-int64_t now();
+string getTime();
 
 #endif

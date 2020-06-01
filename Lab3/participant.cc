@@ -27,11 +27,13 @@ MSG participant::recvFromCoorinator()
           Connect* part_conn = new Connect(pa_sock);
           string line;//接收到到字符串
           part_conn->RecvLine(sock,line);
-          logwriter(to_string(TaskId)+" REQUEST "+line);//接到请求，写日志。
+          LogItem logitem={.state="REQUEST",.time="",.TaskId=this->TaskId,.massage=line};
+          logwriter(logitem);//完成任务，写日志。
           MSG msgResult=MsgAnalyze(line);//对操作进行处理，得到处理结果。
 
           cout<<"participant recv and finish the request:"<<msgResult.message<<endl;
-          logwriter("FINISH "+line);//完成任务，写日志。
+          logitem={.state="FINISH",.time="",.TaskId=this->TaskId,.massage=line};
+          logwriter(logitem);//完成任务，写日志。
         //   if(msgResult.state)//得到正确处理结果。
         //   {
         //       cout<<"participant recv and finish the request:"<<msgResult.message<<endl;
@@ -157,8 +159,9 @@ MSG participant::get(string key)
     }
     return resultMSG;
 }
-bool participant::logwriter(string data)//向日志文件写入一行。
+bool participant::logwriter(LogItem data)//向日志文件写入一行。
 {
+    data.time=getTime();
     log.push_back(data);
 }
 string RecvHeartTask::Getdata()
@@ -171,36 +174,56 @@ void RecvHeartTask::Setdata(string data)
 }
 int RecvHeartTask::Run()
 {
-    int heart_sock=GetConnFd();
-    string Heart_msg=Getdata();
-    Connect* conn = new Connect(heart_sock);
-    while(1)
+    struct sockaddr_in serverAdd;
+
+    bzero(&serverAdd, sizeof(serverAdd));
+    serverAdd.sin_family = AF_INET;
+    serverAdd.sin_addr.s_addr = inet_addr(GetIP().c_str());
+    serverAdd.sin_port = htons(GetPort());
+    
+    int connfd = socket(AF_INET, SOCK_STREAM, 0);
+ 
+    int connResult = connect(connfd, (struct sockaddr *)&serverAdd, sizeof(serverAdd));
+    if (connResult < 0) 
     {
-        if(!conn->sendLine(heart_sock,Heart_msg))
+        cout << "connect error" << std::endl;
+
+    }  
+    else
+    {
+        string Heart_msg=Getdata();
+        Connect* conn = new Connect(connfd);
+        while(1)
         {
-            cout<<"send faild!";
+            if(!conn->sendLine(connfd,Heart_msg))
+            {
+                cout<<"send faild!";
+            }
+            usleep(500000);
         }
-        usleep(500000);
     }
+
 }
 void participant::heart()
 {
-    int heart_sock=SocketApi::Connect_sock(CoInfo.IP,CoInfo.port);//把创建socket的过程也放里面了。返回创建的用于connect的socket
-    string Heart_msg=to_string(TaskId);
-    Connect* conn = new Connect(heart_sock);
-    while(1)
-    {
-        if(!conn->sendLine(heart_sock,Heart_msg))
-        {
-            cout<<"send faild!";
-        }
-        usleep(500000);
-    }
-    // CThreadPool Pool(2);
-    // RecvHeartTask* ta=new RecvHeartTask;
-    // ta->SetConnFd(heart_sock);
-    // ta->Setdata(to_string(TaskId));
-    // Pool.AddTask(ta);
+    // int heart_sock=SocketApi::Connect_sock(CoInfo.IP,CoInfo.port);//把创建socket的过程也放里面了。返回创建的用于connect的socket
+    // string Heart_msg=to_string(TaskId);
+    // Connect* conn = new Connect(heart_sock);
+    // while(1)
+    // {
+    //     if(!conn->sendLine(heart_sock,Heart_msg))
+    //     {
+    //         cout<<"send faild!";
+    //     }
+    //     usleep(500000);
+    // }
+    CThreadPool Pool(2);
+    RecvHeartTask* ta=new RecvHeartTask;
+    //ta->SetConnFd(heart_sock);
+    ta->Setdata(to_string(TaskId));
+    ta->SetIP(CoInfo.IP);
+    ta->SetPort(CoInfo.port);
+    Pool.AddTask(ta);
 }
 bool participant::recovery()
 {
