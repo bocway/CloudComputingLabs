@@ -82,7 +82,7 @@ MSG coordinator::RequestToParticipant(string msg)//将请求发送给参与者,�
         if(!req_Para[i].state)
         {
             //该线程已断开，更改该线程的状态表值。
-            TaskTable[i].TaskState=zombie;
+            TaskTable[i].State=zombie;
         }
         else
         {
@@ -93,7 +93,6 @@ MSG coordinator::RequestToParticipant(string msg)//将请求发送给参与者,�
         }     
     }
     co_state=READY;
-    //cout<<"request finish!"<<endl;
     return returnMSG;
 }//此函数需要统计多个线程的值是否正常，是否超时。
 

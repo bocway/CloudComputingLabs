@@ -86,8 +86,6 @@ MSG participant::MsgAnalyze(string resp)
         return delate(keyList);
     }
     else return resultMSG;
-
-
 }
 MSG participant::set(string key,string value)//对本地数据库进行set操作
 {

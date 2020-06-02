@@ -30,9 +30,11 @@
 
 using namespace std;
 enum STATE {init,live,zombie,recovery,WAIT,READY,DONE,RECOVERY};
-struct MSG{//state代表连接状态，false为连接失败。message为要传输的信息。
+struct MSG{
     bool state;
     string message;
+//state代表连接状态，false为连接失败。
+//message为要传输的信息。    
 };
 const MSG errorMSG={.state=false,.message="-ERROR\r\n"};
 struct Socket{
@@ -40,15 +42,16 @@ struct Socket{
     int port;
 };
 struct LogItem{
-    string state;
-    string time;
-    int TaskId;
-    string massage;
+    string state;//任务状态(COMMIT,ABORT)
+    string time;//当前时间
+    int TaskId;//任务号
+    string massage;//任务命令
 };
 struct TaskTableItem{
-    int TaskId;
-    int64_t TimeStamp;
-    STATE TaskState;
+    Socket pa_info;//参与者信息
+    int TaskId;//参与者目前执行的任务号
+    int64_t TimeStamp;//发送时刻
+    STATE State;//参与者状态
 };
 typedef struct {
    int socket;
