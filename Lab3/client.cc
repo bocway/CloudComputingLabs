@@ -44,7 +44,9 @@ int main(int argc, char** argv)
     if( (sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0){
         printf("create socket error: %s(errno: %d)\n", strerror(errno),errno);
     }
+    bool bDontLinger = false;
 
+    setsockopt(sockfd,SOL_SOCKET,SO_REUSEADDR,(const char*)&bDontLinger,sizeof(bool));
     memset(&servaddr, 0, sizeof(servaddr));
     servaddr.sin_family = AF_INET;
     servaddr.sin_port = htons(8001);
@@ -106,7 +108,7 @@ int main(int argc, char** argv)
         }
         else if(words[0]=="DEL")
         {
-            msg1 += "\r\n$3\r\nDEL\r\n";
+            msg1 += "\r\n";
             len = words[1].length();
             len_char = len + '0';
             string using1 = "\"";
