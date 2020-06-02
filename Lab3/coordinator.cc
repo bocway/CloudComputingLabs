@@ -34,6 +34,7 @@ void* oneRequest(void* args)//void创建不了线程- -
         cout << "connect error" << std::endl;
         para->state=false;
         para->returnMSG="-ERROR\r\n";
+        close(connfd);
     }  
     else
     {
@@ -65,17 +66,13 @@ MSG coordinator::RequestToParticipant(string msg)//将请求发送给参与者,�
     MSG returnMSG={.state=false,.message="-ERROR\r\n"};
     for(int i=0;i<len;i++)
     {
-        //connfd[i]=SocketApi::Connect_sock(pa_list[i].IP,pa_list[i].port);//把创建socket的过程也放里面了。返回创建的用于connect的socket
         ThreadParas req_args;
         req_Para[i].msg=msg;
-        //req_Para[i].socket=connfd[i];
         req_Para[i].socketMSG=pa_list[i];
-        //pthread_create(&req_th[i], NULL, oneRequest, &req_Para[i]);
         if(pthread_create(&req_th[i], NULL, oneRequest, &req_Para[i])!=0)//create thread
         {
             perror("pthread_create failed");
-        }
-        //oneRequest(&req_Para[i]);                       
+        }                     
     }
     for(int i=0;i<len;i++)
         pthread_join(req_th[i],NULL);
@@ -105,31 +102,35 @@ void coordinator::recvFromClient()
     int co_sock=SocketApi::Socket();
     SocketApi::Bind(co_sock,socketInfo.port,socketInfo.IP);
     SocketApi::Listen(co_sock);
-    while(1)
+    while(1)//多个客户端连接
 	{
        std::string peer_ip;
        int peer_port;
        int sock = SocketApi::Accept(co_sock,peer_ip,peer_port);   
        std::cout << "part_sock :" << sock <<std::endl;
-       if(sock>= 0)
+       if(sock>= 0)//收到一个客户
        {
        	  std::cout << peer_ip << " : " << peer_port <<std::endl;
           Connect* part_conn = new Connect(co_sock);
           string line;
-          part_conn->RecvLine(sock,line);
-          cout<<"coordinator recv the request:"<<line<<endl;
-          TaskId=TaskId+1;
-          LogItem logitem={.state="REQUEST",.time="",.TaskId=this->TaskId,.massage=line};
-          logwriter(logitem);
-          //处理任务
-          MSG msg=RequestToParticipant(line);
-          if(msg.state)
-          {
-            LogItem logitem={.state="FINISH",.time="",.TaskId=this->TaskId,.massage=line};
+          while(1)//客户端多个请求。
+          {    
+            part_conn->RecvLine(sock,line);
+            cout<<"coordinator recv the request:"<<line<<endl;
+            TaskId=TaskId+1;
+            LogItem logitem={.state="REQUEST",.time="",.TaskId=this->TaskId,.massage=line};
             logwriter(logitem);
+            //处理任务
+            MSG msg=RequestToParticipant(line);
+            if(msg.state)
+            {
+                LogItem logitem={.state="FINISH",.time="",.TaskId=this->TaskId,.massage=line};
+                logwriter(logitem);
+            }
+            //发回给客户端。
+            part_conn->sendLine(sock,msg.message);
           }
-          //发回给客户端。
-          part_conn->sendLine(sock,msg.message);
+          
        }
 	}
 }

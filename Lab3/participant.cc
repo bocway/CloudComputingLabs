@@ -10,7 +10,7 @@ participant::participant(Socket pa_,Socket co_)
     pa_state=WAIT;
     
 }
-MSG participant::recvFromCoorinator()
+MSG participant::recvFromCoorinator()//每次收到就作出回应。
 {
     int pa_sock=SocketApi::Socket();
     SocketApi::Bind(pa_sock,socketInfo.port,socketInfo.IP);
