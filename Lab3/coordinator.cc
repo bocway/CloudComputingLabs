@@ -48,7 +48,7 @@ void* oneRequest(void* args)//void创建不了线程- -
         string respone;
         if(conn->RecvLine(connfd,respone))//收客户端回复到请求。
         {
-            //cout<<"get response from participant:"<<respone<<endl;
+            //cout<<"get a response"<<endl;
             para->returnMSG=respone;
             para->state=true;
         }
@@ -107,16 +107,16 @@ void coordinator::recvFromClient()
        std::string peer_ip;
        int peer_port;
        int sock = SocketApi::Accept(co_sock,peer_ip,peer_port);   
-       std::cout << "part_sock :" << sock <<std::endl;
+       //std::cout << "part_sock :" << sock <<std::endl;
        if(sock>= 0)//收到一个客户
        {
-       	  std::cout << peer_ip << " : " << peer_port <<std::endl;
+       	  //std::cout << peer_ip << " : " << peer_port <<std::endl;
           Connect* part_conn = new Connect(co_sock);
           string line;
           while(1)//客户端多个请求。
           {    
             part_conn->RecvLine(sock,line);
-            cout<<"coordinator recv the request:"<<line<<endl;
+            cout<<"coordinator recv the request"<<endl;
             TaskId=TaskId+1;
             LogItem logitem={.state="REQUEST",.time="",.TaskId=this->TaskId,.massage=line};
             logwriter(logitem);
@@ -128,6 +128,7 @@ void coordinator::recvFromClient()
                 logwriter(logitem);
             }
             //发回给客户端。
+            cout<<"send"<<msg.message<<"to client"<<endl;
             part_conn->sendLine(sock,msg.message);
           }
           
@@ -162,10 +163,10 @@ void coordinator::recvHeart()
        std::string peer_ip;
        int peer_port;
        int sock = SocketApi::Accept(co_sock,peer_ip,peer_port);   
-       std::cout << "part_sock :" << sock <<std::endl;
+       //std::cout << "part_sock :" << sock <<std::endl;
        if(sock>= 0)
        {
-       	  std::cout << peer_ip << " : " << peer_port <<std::endl;
+       	  //std::cout << peer_ip << " : " << peer_port <<std::endl;
           HeartTask* ta=new HeartTask;
           ta->SetConnFd(sock);    
           ta->SetIP(peer_ip);

@@ -20,10 +20,10 @@ MSG participant::recvFromCoorinator()//每次收到就作出回应。
        std::string peer_ip;
        int peer_port;
        int sock = SocketApi::Accept(pa_sock,peer_ip,peer_port);   
-       std::cout << "part_sock :" << sock <<std::endl;
+       //std::cout << "part_sock :" << sock <<std::endl;
        if(sock>= 0)
        {
-       	  std::cout << peer_ip << " : " << peer_port <<std::endl;
+       	  //std::cout << peer_ip << " : " << peer_port <<std::endl;
           Connect* part_conn = new Connect(pa_sock);
           string line;//接收到到字符串
           part_conn->RecvLine(sock,line);
@@ -31,7 +31,7 @@ MSG participant::recvFromCoorinator()//每次收到就作出回应。
           logwriter(logitem);//完成任务，写日志。
           MSG msgResult=MsgAnalyze(line);//对操作进行处理，得到处理结果。
 
-          cout<<"participant recv and finish the request:"<<msgResult.message<<endl;
+          cout<<"participant recv and finish the request"<<endl;
           logitem={.state="FINISH",.time="",.TaskId=this->TaskId,.massage=line};
           logwriter(logitem);//完成任务，写日志。
         //   if(msgResult.state)//得到正确处理结果。
@@ -54,10 +54,10 @@ MSG participant::MsgAnalyze(string resp)
 {
     MSG resultMSG={.state=false,.message="-ERROR\r\n"};//初始化
     vector<string> result=mysplit(resp,"\r\n");
-    for(int i=0;i<result.size();i++)
-    {
-        cout<<result[i]<<endl;
-    }
+    // for(int i=0;i<result.size();i++)
+    // {
+    //     cout<<result[i]<<endl;
+    // }
     if(result.size()<5) return resultMSG;//错误信息
     if(result[2]=="GET")
     {
@@ -144,10 +144,7 @@ MSG participant::get(string key)
         string value=iter->second;
         vector<string> result=mysplit(value," ");
         string msg='*'+to_string(result.size());
-        // for(int i=0;i<result.size();i++)
-        // {
-        //     cout<<result[i]<<endl;
-        // }
+
         for(int i=0;i<result.size();i++)
         {
             int len=result[i].length();
@@ -187,7 +184,6 @@ int RecvHeartTask::Run()
     if (connResult < 0) 
     {
         cout << "connect error" << std::endl;
-
     }  
     else
     {

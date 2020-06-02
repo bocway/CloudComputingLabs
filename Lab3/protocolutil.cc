@@ -7,7 +7,7 @@ const char* ErrLevel[] = {
 
 int SocketApi::Socket()
 {
-	std::cout << "socket is ready..." << std::endl;
+	//std::cout << "socket is ready..." << std::endl;
 	int sock = socket(AF_INET,SOCK_STREAM,0);
 	if(sock < 0)
 	{
@@ -23,7 +23,7 @@ int SocketApi::Socket()
 }
 void SocketApi::Bind(int sock,int port,std::string SERV_ADDR)
 {
-	std::cout << "bind is ready..." << std::endl;
+	//std::cout << "bind is ready..." << std::endl;
 	struct sockaddr_in local;
 	bzero(&local,sizeof(local));
 	local.sin_family = AF_INET;
@@ -38,7 +38,7 @@ void SocketApi::Bind(int sock,int port,std::string SERV_ADDR)
 }
 void SocketApi::Listen(int sock)
 {
-	std::cout << "listen is ready..." << std::endl;
+	//std::cout << "listen is ready..." << std::endl;
 	if(listen(sock,BACKLOG) < 0)
 	{
 		//LOG("listen error",ERROR);
@@ -49,7 +49,7 @@ void SocketApi::Listen(int sock)
 
 int SocketApi::Accept(int listen_sock,std::string& ip,int &port)
 {
-	std::cout << "accept is ready..." << std::endl;
+	//std::cout << "accept is ready..." << std::endl;
 	struct sockaddr_in peer;
 	socklen_t len = sizeof(peer);
 	int sock = accept(listen_sock,(struct sockaddr*)&peer,&len);
@@ -65,7 +65,7 @@ int SocketApi::Accept(int listen_sock,std::string& ip,int &port)
 int SocketApi::Connect_sock(std::string SERV_ADDR,int SERV_PORT)
 {
 	
-    std::cout << "connect is ready...." << std::endl;
+    //std::cout << "connect is ready...." << std::endl;
 
     struct sockaddr_in serverAdd;
 
@@ -103,12 +103,12 @@ bool Connect::RecvLine(int sock_,std::string& line)
 	ssize_t s = recv(sock_,buff,BUFF_NUM,0);
     buff[strlen(buff)] = '\0';
     line = buff;
-    std::cout<<"recv line:" << line <<" size:"<<s<<std::endl;
+    //std::cout<<"recv line:" << line <<" size:"<<s<<std::endl;
     return (s > 0) ? true:false;
 }
 bool Connect::sendLine(int connfd,std::string line)
 {
     ssize_t s = send(connfd,line.c_str(),line.size(),0);
-    std::cout << "send line:" <<line << " size:" <<s <<std::endl;
+    //std::cout << "send line:" <<line << " size:" <<s <<std::endl;
     return (s > 0) ? true:false;
 }

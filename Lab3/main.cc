@@ -104,16 +104,7 @@ int main(int argc, char* argv[])
       if(mode==1)//coordinator
       {
         coordinator b(co_,pa_list);
-        // while(1)
-        // {
-        //   string s;
-        //   cin>>s;
-        //   b.RequestToParticipant(s);
 
-        // }
-         //b.RequestToParticipant("*4\r\n$3\r\nSET\r\n$7\r\nCS06142\r\n$5\r\nCloud\r\n$9\r\nComputing\r\n");
-         //b.RequestToParticipant("*2\r\n$3\r\nGET\r\n$7\r\nCS06142\r\n");
-        //b.recvHeart();
         b.recvFromClient();
         
       }
