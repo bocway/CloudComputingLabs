@@ -12,13 +12,12 @@
 #include<queue>
 #include "sudoku.h"
 
-#define INPUT_JOB_NUM 30
 int nextJobToBeDone=0;
-int debug=1;
+int debug=true;
 char puzzle[128];
-int total_solved = 0;
-int total = 0;
-
+long int total_solved = 0;
+long int total = 0;
+bool flag=false;
 pthread_mutex_t jobqueueMutex=PTHREAD_MUTEX_INITIALIZER;
 
 int64_t now()
@@ -45,21 +44,31 @@ boardStruct recvAJob()
 {
 
   boardStruct currentJob;
-
+  if(flag && q.empty())
+  {
+    currentJob.finish=true;
+    return currentJob;
+  }
   sem_wait(&in_full); 
   pthread_mutex_lock(&in_mutex);
-  currentJob=q.front();
-  q.pop();
+  if(flag && q.empty())
+  {
+    currentJob.finish=true;
+  }
+  else
+  {
+    currentJob=q.front();
+    q.pop();
+  }
+  
   pthread_mutex_unlock(&in_mutex);
   sem_post(&in_empty); 
   
-
   return currentJob;
 }
 
 void* myReadFunc(void* args){
   ReadParas* para = (ReadParas*) args;
-
   FILE* fp = fopen(para->fileName, "r");//argv【1】：open the file  
   while (fgets(puzzle, sizeof puzzle, fp) != NULL) {//get a input puzzle
     if (strlen(puzzle) >= N) {
@@ -68,6 +77,7 @@ void* myReadFunc(void* args){
       //init_cache();
     }
   }
+  flag=true;//标志输入结束的flag
 }
 
 void* mysolve(void* args) {
@@ -80,15 +90,11 @@ void* mysolve(void* args) {
     currentJob=recvAJob();//获得一个任务。 这个函数里面要加锁。
     if(currentJob.finish)//All job done!
     {
-        if(debug)
-          printf("worker finish \n");
         break;
     }
       
     if(debug)
       printf("worker get num %d \n",currentJob.id);
-    // whichJobIHaveDone[numOfJobsIHaveDone]=currentJobID;
-    // numOfJobsIHaveDone++;
 
     if(solve_sudoku_dancing_links(currentJob))
     {
@@ -111,7 +117,11 @@ void printer(outStruct &o){
 void* myOutFunc(void* args) {
   long int next_id=0;
   while(1)
-  {
+  { 
+    if(flag && next_id>=total)
+    { 
+      break;  
+    }
     sem_wait(&out_full); 
     pthread_mutex_lock(&out_mutex);
 
@@ -166,9 +176,7 @@ int main(int argc, char* argv[])
   {
     perror("fileReader pthread_create failed");
     exit(1);
-  }
-
-  
+  }  
   for(int i=0;i<numOfWorkerThread;i++)
   {
     if(pthread_create(&th[i], NULL, mysolve, &thPara[i])!=0)
@@ -184,15 +192,24 @@ int main(int argc, char* argv[])
   }
 
   pthread_join(fileReader, NULL);
+  if(debug)
+    printf("reader finish\n");
   for(int i=0;i<numOfWorkerThread;i++)
+  {
     pthread_join(th[i], NULL);
+    if(debug)
+      printf("worker %d finish\n",i);
+  }
+    
   pthread_join(outputer, NULL);
+  if(debug)
+    printf("outputer finish\n");
 
   for(int i=0;i<numOfWorkerThread;i++)
     total_solved=total_solved+thPara[i].numOfsolve;
   int64_t end = now();
   double sec = (end-start)/1000000.0;
-  printf("%f sec %f ms each %d\n", sec, 1000*sec/total, total_solved);
+  printf("%f sec %f ms each %ld\n", sec, 1000*sec/total, total_solved);
 
   sem_destroy(&in_full); 
   sem_destroy(&in_empty); 
